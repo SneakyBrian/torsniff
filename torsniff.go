@@ -2,25 +2,25 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
+	"net/http"
 	"os"
-	"path"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/blevesearch/bleve/v2"
+
 	"github.com/marksamman/bencode"
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
-	"go.etcd.io/etcd/pkg/fileutil"
 )
 
-const (
-	directory = "torrents"
+var (
+	index bleve.Index
 )
 
 type tfile struct {
@@ -114,7 +114,6 @@ type torsniff struct {
 	secret     string
 	timeout    time.Duration
 	blacklist  *blackList
-	dir        string
 }
 
 func (t *torsniff) run() error {
@@ -152,10 +151,6 @@ func (t *torsniff) work(ac *announcement, tokens chan struct{}) {
 		<-tokens
 	}()
 
-	if t.isTorrentExist(ac.infohashHex) {
-		return
-	}
-
 	peerAddr := ac.peer.String()
 	if t.blacklist.has(peerAddr) {
 		return
@@ -170,58 +165,38 @@ func (t *torsniff) work(ac *announcement, tokens chan struct{}) {
 		return
 	}
 
-	if err := t.saveTorrent(ac.infohashHex, meta); err != nil {
-		return
-	}
-
 	torrent, err := parseTorrent(meta, ac.infohashHex)
 	if err != nil {
 		return
 	}
 
+	log.Printf("indexing torrent %s...", torrent.infohashHex)
+
+	// index the torrent
+	index.Index(torrent.infohashHex, torrent)
+
 	log.Println(torrent)
 }
 
-func (t *torsniff) isTorrentExist(infohashHex string) bool {
-	name, _ := t.torrentPath(infohashHex)
-	_, err := os.Stat(name)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return err == nil
-}
+func searchHandler(w http.ResponseWriter, r *http.Request) {
 
-func (t *torsniff) saveTorrent(infohashHex string, data []byte) error {
-	name, dir := t.torrentPath(infohashHex)
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return err
-	}
+	searchText := r.URL.Query().Get("s")
 
-	d, err := bencode.Decode(bytes.NewBuffer(data))
+	// search for some text
+	query := bleve.NewMatchQuery(searchText)
+	search := bleve.NewSearchRequest(query)
+	searchResults, err := index.Search(search)
 	if err != nil {
-		return err
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		return
 	}
 
-	f, err := fileutil.TryLockFile(name, os.O_WRONLY|os.O_CREATE, 0755)
+	err = json.NewEncoder(w).Encode(searchResults)
 	if err != nil {
-		return err
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
 	}
-	defer f.Close()
-
-	_, err = f.Write(bencode.Encode(map[string]interface{}{
-		"info": d,
-	}))
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (t *torsniff) torrentPath(infohashHex string) (name string, dir string) {
-	dir = path.Join(t.dir, infohashHex[:2], infohashHex[len(infohashHex)-2:])
-	name = path.Join(dir, infohashHex+".torrent")
-	return
 }
 
 func main() {
@@ -231,12 +206,8 @@ func main() {
 	var port uint16
 	var peers int
 	var timeout time.Duration
-	var dir string
 	var verbose bool
 	var friends int
-
-	home, err := homedir.Dir()
-	userHome := path.Join(home, directory)
 
 	root := &cobra.Command{
 		Use:          "torsniff",
@@ -244,18 +215,29 @@ func main() {
 		SilenceUsage: true,
 	}
 	root.RunE = func(cmd *cobra.Command, args []string) error {
-		if dir == userHome && err != nil {
-			return err
-		}
 
-		absDir, err := filepath.Abs(dir)
-		if err != nil {
-			return err
-		}
+		var err error
 
 		log.SetOutput(ioutil.Discard)
 		if verbose {
 			log.SetOutput(os.Stdout)
+		}
+
+		const indexFile = "torsniff.index"
+
+		index, err = bleve.Open(indexFile)
+		if err == bleve.ErrorIndexPathDoesNotExist {
+			log.Println("Creating new index...")
+
+			indexMapping := bleve.NewIndexMapping()
+			index, err = bleve.New(indexFile, indexMapping)
+			if err != nil {
+				log.Fatal(err)
+			}
+		} else if err != nil {
+			log.Fatal(err)
+		} else {
+			log.Println("Opening existing index...")
 		}
 
 		p := &torsniff{
@@ -264,10 +246,13 @@ func main() {
 			maxFriends: friends,
 			maxPeers:   peers,
 			secret:     string(randBytes(20)),
-			dir:        absDir,
 			blacklist:  newBlackList(5*time.Minute, 50000),
 		}
-		return p.run()
+		go p.run()
+
+		http.HandleFunc("/query", searchHandler)
+
+		return http.ListenAndServe(":8090", nil)
 	}
 
 	root.Flags().StringVarP(&addr, "addr", "a", "", "listen on given address (default all, ipv4 and ipv6)")
@@ -275,7 +260,6 @@ func main() {
 	root.Flags().IntVarP(&friends, "friends", "f", 500, "max fiends to make with per second")
 	root.Flags().IntVarP(&peers, "peers", "e", 400, "max peers to connect to download torrents")
 	root.Flags().DurationVarP(&timeout, "timeout", "t", 10*time.Second, "max time allowed for downloading torrents")
-	root.Flags().StringVarP(&dir, "dir", "d", userHome, "the directory to store the torrents")
 	root.Flags().BoolVarP(&verbose, "verbose", "v", true, "run in verbose mode")
 
 	if err := root.Execute(); err != nil {

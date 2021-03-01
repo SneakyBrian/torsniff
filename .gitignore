@@ -12,8 +12,11 @@
 
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 .glide/
-torsniff
+torsniff-search
 .idea
 releases
 .DS_Store
 bin
+
+# index
+/torsniff.index/
