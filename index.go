@@ -20,7 +20,7 @@ func startIndex() {
 
 	index, err = bleve.Open(indexFile)
 	if err == bleve.ErrorIndexPathDoesNotExist {
-		log.Println("Creating new index...")
+		log.Println("creating new index...")
 
 		indexMapping := bleve.NewIndexMapping()
 
@@ -52,7 +52,7 @@ func startIndex() {
 	} else if err != nil {
 		log.Fatal(err)
 	} else {
-		log.Println("Opening existing index...")
+		log.Println("opening existing index...")
 	}
 
 	docCount, _ := index.DocCount()

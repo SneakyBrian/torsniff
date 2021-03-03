@@ -123,24 +123,11 @@ func (t *torsniff) run() error {
 
 	dht.run()
 
-	// keep rejoining every 2 minutes
-	const rejoinDuration = 2 * time.Minute
-	rejoinTicker := time.NewTicker(rejoinDuration)
-	go func() {
-		for {
-			<-rejoinTicker.C
-			log.Println("rejoining DHT...")
-			dht.join()
-		}
-	}()
-
 	log.Println("running, it may take a few minutes...")
 
 	for {
 		select {
 		case <-dht.announcements.wait():
-			// reset the rejoin ticker if we are getting activity
-			rejoinTicker.Reset(rejoinDuration)
 			for {
 				if ac := dht.announcements.get(); ac != nil {
 					tokens <- struct{}{}

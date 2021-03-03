@@ -16,7 +16,7 @@ import (
 	"golang.org/x/time/rate"
 )
 
-var seeds = []string{
+var bootstrapSeeds = []string{
 	"router.bittorrent.com:6881",
 	"dht.transmissionbt.com:6881",
 	"router.utorrent.com:6881",
@@ -203,7 +203,7 @@ func (d *dht) listen() {
 func (d *dht) join() {
 	const timesForSure = 3
 	for i := 0; i < timesForSure; i++ {
-		for _, addr := range seeds {
+		for _, addr := range bootstrapSeeds {
 			select {
 			case d.chNode <- &node{
 				addr: addr,
@@ -214,6 +214,30 @@ func (d *dht) join() {
 			}
 		}
 	}
+}
+
+func (d *dht) refresh() int {
+
+	seeds := make([]string, len(d.seeds))
+
+	d.mu.Lock()
+	count := copy(seeds, d.seeds)
+	d.mu.Unlock()
+
+	go func(s []string) {
+		for _, addr := range s {
+			select {
+			case d.chNode <- &node{
+				addr: addr,
+				id:   string(randBytes(20)),
+			}:
+			case <-d.die:
+				return
+			}
+		}
+	}(seeds)
+
+	return count
 }
 
 func (d *dht) onMessage(data []byte, from net.UDPAddr) {
@@ -268,6 +292,10 @@ func (d *dht) onReply(dict map[string]interface{}, from net.UDPAddr) {
 		}
 
 		d.chNode <- node
+
+		d.mu.Lock()
+		d.seeds = append(d.seeds, node.addr)
+		d.mu.Unlock()
 	}
 }
 
