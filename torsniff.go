@@ -2,50 +2,45 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
-	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
-
-	"github.com/blevesearch/bleve/v2"
 
 	"github.com/marksamman/bencode"
 	"github.com/spf13/cobra"
 )
 
-var (
-	index bleve.Index
-)
-
 type tfile struct {
-	name   string
-	length int64
+	Name   string `json:"name"`
+	Length int64  `json:"length"`
 }
 
 func (t *tfile) String() string {
-	return fmt.Sprintf("name: %s\n, size: %d\n", t.name, t.length)
+	return fmt.Sprintf("name: %s\n, size: %d\n", t.Name, t.Length)
 }
 
 type torrent struct {
-	infohashHex string
-	name        string
-	length      int64
-	files       []*tfile
+	InfohashHex string   `json:"infohashHex"`
+	Name        string   `json:"name"`
+	Length      int64    `json:"length"`
+	Files       []*tfile `json:"files"`
+	IndexType   string   `json:"indexType"`
 }
 
 func (t *torrent) String() string {
 	return fmt.Sprintf(
 		"link: %s\nname: %s\nsize: %d\nfile: %d\n",
-		fmt.Sprintf("magnet:?xt=urn:btih:%s", t.infohashHex),
-		t.name,
-		t.length,
-		len(t.files),
+		fmt.Sprintf("magnet:?xt=urn:btih:%s", t.InfohashHex),
+		t.Name,
+		t.Length,
+		len(t.Files),
 	)
 }
 
@@ -55,14 +50,14 @@ func parseTorrent(meta []byte, infohashHex string) (*torrent, error) {
 		return nil, err
 	}
 
-	t := &torrent{infohashHex: infohashHex}
+	t := &torrent{InfohashHex: infohashHex}
 	if name, ok := dict["name.utf-8"].(string); ok {
-		t.name = name
+		t.Name = name
 	} else if name, ok := dict["name"].(string); ok {
-		t.name = name
+		t.Name = name
 	}
 	if length, ok := dict["length"].(int64); ok {
-		t.length = length
+		t.Length = length
 	}
 
 	var totalSize int64
@@ -86,7 +81,7 @@ func parseTorrent(meta []byte, infohashHex string) (*torrent, error) {
 			filelength = length
 			totalSize += filelength
 		}
-		t.files = append(t.files, &tfile{name: filename, length: filelength})
+		t.Files = append(t.Files, &tfile{Name: filename, Length: filelength})
 	}
 
 	if files, ok := dict["files"].([]interface{}); ok {
@@ -97,12 +92,14 @@ func parseTorrent(meta []byte, infohashHex string) (*torrent, error) {
 		}
 	}
 
-	if t.length == 0 {
-		t.length = totalSize
+	if t.Length == 0 {
+		t.Length = totalSize
 	}
-	if len(t.files) == 0 {
-		t.files = append(t.files, &tfile{name: t.name, length: t.length})
+	if len(t.Files) == 0 {
+		t.Files = append(t.Files, &tfile{Name: t.Name, Length: t.Length})
 	}
+
+	t.IndexType = "torrent"
 
 	return t, nil
 }
@@ -126,11 +123,24 @@ func (t *torsniff) run() error {
 
 	dht.run()
 
+	// keep rejoining every 2 minutes
+	const rejoinDuration = 2 * time.Minute
+	rejoinTicker := time.NewTicker(rejoinDuration)
+	go func() {
+		for {
+			<-rejoinTicker.C
+			log.Println("rejoining DHT...")
+			dht.join()
+		}
+	}()
+
 	log.Println("running, it may take a few minutes...")
 
 	for {
 		select {
 		case <-dht.announcements.wait():
+			// reset the rejoin ticker if we are getting activity
+			rejoinTicker.Reset(rejoinDuration)
 			for {
 				if ac := dht.announcements.get(); ac != nil {
 					tokens <- struct{}{}
@@ -170,33 +180,14 @@ func (t *torsniff) work(ac *announcement, tokens chan struct{}) {
 		return
 	}
 
-	log.Printf("indexing torrent %s...", torrent.infohashHex)
+	log.Printf("indexing torrent %s...", torrent.InfohashHex)
+
+	index.SetInternal([]byte(ac.infohashHex), meta)
 
 	// index the torrent
-	index.Index(torrent.infohashHex, torrent)
+	index.Index(torrent.InfohashHex, torrent)
 
 	log.Println(torrent)
-}
-
-func searchHandler(w http.ResponseWriter, r *http.Request) {
-
-	searchText := r.URL.Query().Get("s")
-
-	// search for some text
-	query := bleve.NewMatchQuery(searchText)
-	search := bleve.NewSearchRequest(query)
-	searchResults, err := index.Search(search)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Println(err)
-		return
-	}
-
-	err = json.NewEncoder(w).Encode(searchResults)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Println(err)
-	}
 }
 
 func main() {
@@ -209,36 +200,21 @@ func main() {
 	var verbose bool
 	var friends int
 
+	fmt.Println("starting...")
+
 	root := &cobra.Command{
-		Use:          "torsniff",
-		Short:        "torsniff - A sniffer that sniffs torrents from BitTorrent network.",
+		Use:          "torsniff-search",
+		Short:        "torsniff-search - A sniffer that sniffs torrents from BitTorrent network.",
 		SilenceUsage: true,
 	}
 	root.RunE = func(cmd *cobra.Command, args []string) error {
-
-		var err error
 
 		log.SetOutput(ioutil.Discard)
 		if verbose {
 			log.SetOutput(os.Stdout)
 		}
 
-		const indexFile = "torsniff.index"
-
-		index, err = bleve.Open(indexFile)
-		if err == bleve.ErrorIndexPathDoesNotExist {
-			log.Println("Creating new index...")
-
-			indexMapping := bleve.NewIndexMapping()
-			index, err = bleve.New(indexFile, indexMapping)
-			if err != nil {
-				log.Fatal(err)
-			}
-		} else if err != nil {
-			log.Fatal(err)
-		} else {
-			log.Println("Opening existing index...")
-		}
+		startIndex()
 
 		p := &torsniff{
 			laddr:      net.JoinHostPort(addr, strconv.Itoa(int(port))),
@@ -250,9 +226,9 @@ func main() {
 		}
 		go p.run()
 
-		http.HandleFunc("/query", searchHandler)
+		startHTTP()
 
-		return http.ListenAndServe(":8090", nil)
+		return nil
 	}
 
 	root.Flags().StringVarP(&addr, "addr", "a", "", "listen on given address (default all, ipv4 and ipv6)")
@@ -263,6 +239,18 @@ func main() {
 	root.Flags().BoolVarP(&verbose, "verbose", "v", true, "run in verbose mode")
 
 	if err := root.Execute(); err != nil {
-		fmt.Println(fmt.Errorf("could not start: %s", err))
+		log.Fatal(fmt.Errorf("could not start: %s", err))
 	}
+
+	// wait for signal to shut down
+	sigs := make(chan os.Signal, 1)
+
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	sig := <-sigs
+	log.Printf("we get signal! %s", sig)
+
+	log.Println("closing index...")
+	index.Close()
+	fmt.Println("exiting...")
 }
