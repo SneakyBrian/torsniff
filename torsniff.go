@@ -125,6 +125,20 @@ func (t *torsniff) run() error {
 
 	log.Println("running, it may take a few minutes...")
 
+	ticker := time.NewTicker(5 * time.Second)
+
+	go func() {
+		var lastCount int
+		for {
+			<-ticker.C
+			count := dht.peerCount()
+			if count > lastCount {
+				log.Printf("got %d peers (+%d)", count, count-lastCount)
+				lastCount = count
+			}
+		}
+	}()
+
 	for {
 		select {
 		case <-dht.announcements.wait():
@@ -147,6 +161,10 @@ func (t *torsniff) work(ac *announcement, tokens chan struct{}) {
 	defer func() {
 		<-tokens
 	}()
+
+	if t.isTorrentExist(ac.infohashHex) {
+		return
+	}
 
 	peerAddr := ac.peer.String()
 	if t.blacklist.has(peerAddr) {
@@ -175,6 +193,11 @@ func (t *torsniff) work(ac *announcement, tokens chan struct{}) {
 	index.Index(torrent.InfohashHex, torrent)
 
 	log.Println(torrent)
+}
+
+func (t *torsniff) isTorrentExist(infohashHex string) bool {
+	_, err := index.GetInternal([]byte(infohashHex))
+	return err == nil
 }
 
 func main() {

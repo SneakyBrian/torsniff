@@ -151,7 +151,7 @@ type dht struct {
 	queryTypes     map[string]func(map[string]interface{}, net.UDPAddr)
 	friendsLimiter *rate.Limiter
 	secret         []byte
-	seeds          []string
+	seeds          map[string]struct{}
 }
 
 func newDHT(laddr string, maxFriendsPerSec int) (*dht, error) {
@@ -171,6 +171,7 @@ func newDHT(laddr string, maxFriendsPerSec int) (*dht, error) {
 		chNode:  make(chan *node),
 		die:     make(chan struct{}),
 		secret:  randBytes(20),
+		seeds:   make(map[string]struct{}),
 	}
 	d.friendsLimiter = rate.NewLimiter(per(maxFriendsPerSec, time.Second), maxFriendsPerSec)
 	d.queryTypes = map[string]func(map[string]interface{}, net.UDPAddr){
@@ -218,14 +219,16 @@ func (d *dht) join() {
 
 func (d *dht) refresh() int {
 
-	seeds := make([]string, len(d.seeds))
-
 	d.mu.Lock()
-	count := copy(seeds, d.seeds)
+	count := len(d.seeds)
+	seeds := make(map[string]struct{}, count)
+	for k, v := range d.seeds {
+		seeds[k] = v
+	}
 	d.mu.Unlock()
 
-	go func(s []string) {
-		for _, addr := range s {
+	go func(s map[string]struct{}) {
+		for addr := range s {
 			select {
 			case d.chNode <- &node{
 				addr: addr,
@@ -238,6 +241,12 @@ func (d *dht) refresh() int {
 	}(seeds)
 
 	return count
+}
+
+func (d *dht) peerCount() int {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return len(d.seeds)
 }
 
 func (d *dht) onMessage(data []byte, from net.UDPAddr) {
@@ -294,7 +303,7 @@ func (d *dht) onReply(dict map[string]interface{}, from net.UDPAddr) {
 		d.chNode <- node
 
 		d.mu.Lock()
-		d.seeds = append(d.seeds, node.addr)
+		d.seeds[node.addr] = struct{}{}
 		d.mu.Unlock()
 	}
 }
