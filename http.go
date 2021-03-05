@@ -1,3 +1,4 @@
+//go:generate esc -o client.go -prefix client/dist -private client/dist
 package main
 
 import (
@@ -138,6 +139,8 @@ func torrentHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func startHTTP() {
+
+	http.Handle("/", http.FileServer(_escFS(false)))
 
 	http.HandleFunc("/query", Gzip(searchHandler))
 	http.HandleFunc("/torrent", Gzip(torrentHandler))
