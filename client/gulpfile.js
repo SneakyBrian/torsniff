@@ -7,13 +7,17 @@ var sourcemaps = require("gulp-sourcemaps");
 var buffer = require("vinyl-buffer");
 var paths = {
   pages: ["src/html/*.html"],
+  stylesheets: ["src/css/*.css"],
 };
 gulp.task("copy-html", function () {
   return gulp.src(paths.pages).pipe(gulp.dest("dist"));
 });
+gulp.task("copy-css", function () {
+  return gulp.src(paths.stylesheets).pipe(gulp.dest("dist/css"));
+});
 gulp.task(
   "default",
-  gulp.series(gulp.parallel("copy-html"), function () {
+  gulp.series(gulp.parallel("copy-html", "copy-css"), function () {
     return browserify({
       basedir: ".",
       debug: true,

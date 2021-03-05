@@ -1,0 +1,16 @@
+.centre {
+    width: 80%;
+    margin: 0 auto;
+}
+
+#title {
+    width: 250px;
+}
+
+#searchTest {
+    width: 70%;
+}
+
+#searchButton {
+    width: 100px;
+}
