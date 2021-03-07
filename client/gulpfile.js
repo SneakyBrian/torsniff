@@ -21,7 +21,9 @@ gulp.task(
     return browserify({
       basedir: ".",
       debug: true,
-      entries: ["src/ts/main.ts"],
+      entries: [
+        "src/ts/main.ts"
+      ],
       cache: {},
       packageCache: {},
     })

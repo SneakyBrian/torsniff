@@ -1,42 +1,44 @@
-// import { sayHello } from "./greet";
-// function showHello(divName: string, name: string) {
-//   const elt = document.getElementById(divName);
-//   elt.innerText = sayHello(name);
-// }
-// showHello("greeting", "TypeScript");
+/// <reference path="../../node_modules/@types/zepto/index.d.ts" />
 
-const button = document.getElementById("searchButton");
-button.addEventListener('click', event => {
-  
-  const searchTextElement = document.getElementById("searchText") as HTMLInputElement;
+import { QueryResponse } from "./searchdata";
+import { generateLink } from "./magnet";
 
-  fetch(`/query?q=${searchTextElement.value}`)
-  .then(response => response.json())
-  .then(data => {
-    const resultsElement = document.getElementById("searchResults");
-    
-    // empty out old results
-    while (resultsElement.firstChild) {
-      resultsElement.removeChild(resultsElement.lastChild);
-    }
+$("#searchButton").on("click", _ => {
 
-    if (data.torrents) {
-      // add in new results
-      for (const torrent of data.torrents) {
-        addSearchResult(resultsElement, torrent);
+  $.ajax({
+    type: 'GET',
+    url: '/query',
+    // data to be added to query string:
+    data: { q: $("#searchText").val() },
+    // type of data we are expecting in return:
+    dataType: 'json',
+    timeout: 300,
+    success: function (data: QueryResponse) {
+
+      const $searchResults = $("#searchResults")
+      $searchResults.empty();
+
+      if (data.torrents) {
+        // add in new results
+        for (const torrent of data.torrents) {
+          const $torrentElement = $("<div>")
+          $torrentElement.append($("<span>").text(torrent.name));
+          $torrentElement.append($(`<a href="${generateLink(torrent.infohashHex)}">🧲</a>`));
+          $searchResults.append($torrentElement);
+        }
+      } else {
+        const $torrentElement = $("<div>")
+        $torrentElement.append($("<span>").text("No Results"));
+        $searchResults.append($torrentElement);
       }
-    } else {
-      addSearchResult(resultsElement, { name: "No Results" });
+    },
+    error: function () {
+      const $searchResults = $("#searchResults")
+      $searchResults.empty();
+      $searchResults.append($("<div>").append($("<span>").text("Error getting results")));
     }
   });
+
 });
 
-function addSearchResult(resultsElement: HTMLElement, torrent: any, ) {
-  const torrentElement = document.createElement("div");
-  
-  const nameElement = document.createElement("span");
-  nameElement.innerText = torrent.name;
-  torrentElement.appendChild(nameElement);
 
-  resultsElement.appendChild(torrentElement);
-}
