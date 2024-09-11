@@ -106,7 +106,7 @@ func (mw *metaWire) fetchCtx(ctx context.Context) ([]byte, error) {
 }
 
 func (mw *metaWire) connect(ctx context.Context) {
-	conn, err := net.DialTimeout("tcp", mw.from, mw.timeout)
+	conn, err := (&net.Dialer{}).DialContext(ctx, "tcp", mw.from)
 	if err != nil {
 		mw.err = fmt.Errorf("connect to remote peer failed: %v", err)
 		return
