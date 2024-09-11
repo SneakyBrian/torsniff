@@ -21,3 +21,6 @@ bin
 # index
 /torsniff.index/
 .aider*
+frontend/dist/
+frontend/node_modules/
+# static/
