@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"embed"
+	"io/fs"
 	"log"
 	"net/http"
 	"net/url"
@@ -9,6 +11,9 @@ import (
 
 	"github.com/blevesearch/bleve/v2"
 )
+
+//go:embed static/*
+var staticFiles embed.FS
 
 type searchResponse struct {
 	SearchResults *bleve.SearchResult `json:"search"`
@@ -143,9 +148,14 @@ func startHTTP() {
 	http.HandleFunc("/torrent", Gzip(torrentHandler))
 	http.HandleFunc("/all", Gzip(allHandler))
 
-	// Serve static files
-	fs := http.FileServer(http.Dir("./static"))
-	http.Handle("/", fs)
+	// Create a file system from the embedded files
+	staticFS, err := fs.Sub(staticFiles, "static")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Serve embedded static files
+	http.Handle("/", http.FileServer(http.FS(staticFS)))
 
 	go http.ListenAndServe(":8090", nil)
 }
