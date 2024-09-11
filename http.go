@@ -143,5 +143,9 @@ func startHTTP() {
 	http.HandleFunc("/torrent", Gzip(torrentHandler))
 	http.HandleFunc("/all", Gzip(allHandler))
 
+	// Serve static files
+	fs := http.FileServer(http.Dir("./static"))
+	http.Handle("/", fs)
+
 	go http.ListenAndServe(":8090", nil)
 }
