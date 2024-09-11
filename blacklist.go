@@ -53,7 +53,7 @@ func (b *blackList) has(addr string) bool {
 
 	if elem := b.cache[addr]; elem != nil {
 		e := elem.Value.(*entry)
-		if time.Now().Sub(e.ctime) < b.expiredAfter {
+		if time.Since(e.ctime) < b.expiredAfter {
 			return true
 		}
 		b.ll.Remove(elem)
