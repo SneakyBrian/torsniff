@@ -21,13 +21,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function displayResults(torrents) {
         resultsList.innerHTML = '';
-        if (torrents && Array.isArray(torrents)) {
+        if (torrents && Array.isArray(torrents) && torrents.length > 0) {
             torrents.forEach(torrent => {
                 const li = document.createElement('li');
                 li.textContent = `${torrent.name} (${torrent.length} bytes)`;
                 resultsList.appendChild(li);
             });
-        } else if (torrents && torrents.length === 0) {
+        } else {
             const li = document.createElement('li');
             li.textContent = 'No torrents found.';
             resultsList.appendChild(li);
