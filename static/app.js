@@ -27,8 +27,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 li.textContent = `${torrent.name} (${torrent.length} bytes)`;
                 resultsList.appendChild(li);
             });
-        } else {
-            console.error('Invalid data format:', torrents);
+        } else if (torrents && torrents.length === 0) {
+            const li = document.createElement('li');
+            li.textContent = 'No torrents found.';
+            resultsList.appendChild(li);
         }
     }
 
