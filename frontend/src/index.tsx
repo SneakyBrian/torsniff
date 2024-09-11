@@ -52,7 +52,7 @@ const App: React.FC = () => {
       <button onClick={handleAll}>Get All Torrents</button>
       {error && <p style={{ color: 'red' }}>{error}</p>}
       <ul>
-        {results.map((torrent: any) => (
+        {results && results.map((torrent: any) => (
           <li key={torrent.InfohashHex}>
             {torrent.Name} - {torrent.Length} bytes
             <button onClick={() => handleTorrent(torrent.InfohashHex)}>Details</button>
