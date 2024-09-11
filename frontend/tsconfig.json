@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es5",                          // Specify ECMAScript target version
-    "module": "esnext",                     // Specify module code generation
+    "target": "ESNext",                          // Specify ECMAScript target version
+    "module": "ESNext",                     // Specify module code generation
     "jsx": "react",
     "outDir": "./dist",                       // Redirect output structure to the directory
     "rootDir": "./src",                       // Specify the root directory of input files
