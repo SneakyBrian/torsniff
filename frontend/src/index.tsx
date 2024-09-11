@@ -24,7 +24,7 @@ const App: React.FC = () => {
       const data = await response.json();
       setResults(data.torrents);
     } catch (err) {
-      setError(err.message);
+      setError((err as Error).message);
     }
   };
 
