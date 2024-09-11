@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function displayResults(torrents) {
         resultsList.innerHTML = '';
-        if (Array.isArray(torrents)) {
+        if (torrents && Array.isArray(torrents)) {
             torrents.forEach(torrent => {
                 const li = document.createElement('li');
                 li.textContent = `${torrent.name} (${torrent.length} bytes)`;
