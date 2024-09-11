@@ -20,3 +20,4 @@ bin
 
 # index
 /torsniff.index/
+.aider*
