@@ -298,7 +298,7 @@ func (d *dht) onQuery(dict map[string]interface{}, from net.UDPAddr) {
 	}
 }
 
-func (d *dht) onReply(dict map[string]interface{}, from net.UDPAddr) {
+func (d *dht) onReply(dict map[string]interface{} /* from */, _ net.UDPAddr) {
 	r, ok := dict["r"].(map[string]interface{})
 	if !ok {
 		return
