@@ -185,6 +185,20 @@ func (d *dht) run() {
 	go d.listen()
 	go d.join()
 	go d.makeFriends()
+
+	// Periodically refresh the seeds
+	ticker := time.NewTicker(10 * time.Minute)
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				d.refresh()
+			case <-d.die:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
 }
 
 func (d *dht) listen() {
