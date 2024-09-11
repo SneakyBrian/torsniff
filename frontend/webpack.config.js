@@ -39,4 +39,5 @@ module.exports = {
         compress: true,
         port: 9000,
     },
+    devtool: 'source-map', // Add this line to enable source maps
 };
