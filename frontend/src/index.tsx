@@ -63,6 +63,20 @@ const App: React.FC = () => {
   };
 
   const renderFiles = (files: any[]) => {
+    const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+
+    const toggleFolder = (path: string) => {
+      setExpandedFolders((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(path)) {
+          newSet.delete(path);
+        } else {
+          newSet.add(path);
+        }
+        return newSet;
+      });
+    };
+
     const fileTree: any = {};
 
     files.forEach((file) => {
@@ -79,18 +93,23 @@ const App: React.FC = () => {
 
     const renderTree = (node: any, path: string[] = []) => {
       return Object.entries(node).map(([key, value]) => {
-        const currentPath = [...path, key];
+        const currentPath = [...path, key].join('/');
+        const isExpanded = expandedFolders.has(currentPath);
+
         if (typeof value === 'number') {
           return (
-            <li key={currentPath.join('/')}>
-              {key} - {formatBytes(value)} {/* Use the formatBytes function here */}
+            <li key={currentPath}>
+              {key} - {formatBytes(value)}
             </li>
           );
         }
+
         return (
-          <li key={currentPath.join('/')}>
-            <strong>{key}</strong>
-            <ul>{renderTree(value, currentPath)}</ul>
+          <li key={currentPath}>
+            <span onClick={() => toggleFolder(currentPath)} style={{ cursor: 'pointer' }}>
+              {isExpanded ? '▼' : '▶'} <strong>{key}</strong>
+            </span>
+            {isExpanded && <ul>{renderTree(value, [...path, key])}</ul>}
           </li>
         );
       });
