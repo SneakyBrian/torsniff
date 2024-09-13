@@ -11,7 +11,7 @@ const App: React.FC = () => {
 
   const fetchResults = async () => {
     try {
-      const endpoint = isSearching ? `/query?q=${query}` : '/all';
+      const endpoint = isSearching ? `/query?q=${query}` : '/all?';
       const response = await fetch(`${endpoint}&f=${page * size}&s=${size}`);
       if (!response.ok) throw new Error('Failed to fetch');
       const data = await response.json();
