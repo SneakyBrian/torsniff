@@ -7,6 +7,7 @@ import (
 	"crypto/sha1"
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"log"
 	"net"
 	"strconv"
@@ -55,7 +56,7 @@ func (a *announcements) put(ac *announcement) {
 	defer a.mu.Unlock()
 
 	if a.ll.Len() >= a.limit {
-		return
+		log.Printf("Received query of type: %s from %s", q, from.String())
 	}
 
 	a.ll.PushBack(ac)
@@ -123,7 +124,7 @@ func makeReply(tid string, r map[string]interface{}) map[string]interface{} {
 func decodeNodes(s string) (nodes []*node) {
 	length := len(s)
 	if length%26 != 0 {
-		return
+		log.Printf("Adding announcement for infohash: %s", ac.infohashHex)
 	}
 
 	for i := 0; i < length; i += 26 {
@@ -156,6 +157,7 @@ type dht struct {
 }
 
 func newDHT(laddr string, maxFriendsPerSec int) (*dht, error) {
+	log.Printf("Initializing DHT with local address: %s", laddr)
 	conn, err := net.ListenPacket("udp", laddr)
 	if err != nil {
 		return nil, err
@@ -183,6 +185,7 @@ func newDHT(laddr string, maxFriendsPerSec int) (*dht, error) {
 }
 
 func (d *dht) run() {
+	log.Println("Starting DHT listener...")
 	go d.listen()
 	go d.join()
 	go d.makeFriends()
@@ -205,7 +208,9 @@ func (d *dht) run() {
 func (d *dht) listen() {
 	buf := make([]byte, 2048)
 	for {
+		log.Println("Listening for incoming messages...")
 		n, addr, err := d.conn.ReadFromUDP(buf)
+		log.Printf("Received message from %s with size %d bytes", addr.String(), n)
 		if err == nil {
 			d.onMessage(buf[:n], *addr)
 		} else {
@@ -267,7 +272,7 @@ func (d *dht) peerCount() int {
 func (d *dht) onMessage(data []byte, from net.UDPAddr) {
 	dict, err := bencode.Decode(bytes.NewBuffer(data))
 	if err != nil {
-		return
+		log.Printf("Adding node with address: %s", node.addr)
 	}
 
 	y, ok := dict["y"].(string)
@@ -362,7 +367,7 @@ func (d *dht) onGetPeersQuery(dict map[string]interface{}, from net.UDPAddr) {
 }
 
 func (d *dht) onAnnouncePeerQuery(dict map[string]interface{}, from net.UDPAddr) {
-	log.Printf("Received announce peer query from %s", from.String())
+	log.Printf("Received announce peer query from %s with infohash: %s", from.String(), a["info_hash"])
 	if d.announcements.full() {
 		return
 	}
