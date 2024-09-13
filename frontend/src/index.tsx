@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 
 const App: React.FC = () => {
@@ -35,26 +35,6 @@ const App: React.FC = () => {
     setIsSearching(false);
     setPage(0); // Reset to first page
     fetchResults();
-  };
-    try {
-      const response = await fetch(`/query?q=${query}&f=${page * size}&s=${size}`);
-      if (!response.ok) throw new Error('Failed to fetch');
-      const data = await response.json();
-      setResults(data.torrents);
-    } catch (err) {
-      setError((err as Error).message);
-    }
-  };
-
-  const handleAll = async () => {
-    try {
-      const response = await fetch(`/all?f=${page * size}&s=${size}`);
-      if (!response.ok) throw new Error('Failed to fetch');
-      const data = await response.json();
-      setResults(data.torrents);
-    } catch (err) {
-      setError((err as Error).message);
-    }
   };
 
   const handleTorrent = async (hash: string) => {
@@ -105,4 +85,6 @@ const container = document.getElementById('root');
 if (container) {
   const root = createRoot(container);
   root.render(<App />);
+} else {
+  console.error("Root container not found");
 }
