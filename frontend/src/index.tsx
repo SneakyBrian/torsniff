@@ -62,7 +62,7 @@ const App: React.FC = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
   };
 
-  const renderFiles = (files: any[]) => {
+  const FileTree: React.FC<{ files: any[] }> = ({ files }) => {
     const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
     const toggleFolder = (path: string) => {
@@ -171,7 +171,7 @@ const App: React.FC = () => {
                   </a>
                 </p>
                 <h3>Files:</h3>
-                {renderFiles(selectedTorrent.files)}
+                <FileTree files={selectedTorrent.files} />
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Close</button>
