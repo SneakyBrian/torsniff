@@ -145,6 +145,12 @@ const App: React.FC = () => {
               <div className="modal-body">
                 <p>Name: {selectedTorrent.name}</p>
                 <p>Size: {formatBytes(selectedTorrent.length)}</p>
+                <p>
+                  Magnet Link: 
+                  <a href={`magnet:?xt=urn:btih:${selectedTorrent.infohashHex}`} target="_blank" rel="noopener noreferrer">
+                    {`magnet:?xt=urn:btih:${selectedTorrent.infohashHex}`}
+                  </a>
+                </p>
                 <h3>Files:</h3>
                 {renderFiles(selectedTorrent.files)}
               </div>
