@@ -8,6 +8,7 @@ const App: React.FC = () => {
   const [page, setPage] = useState(0); // Current page
   const [size, setSize] = useState(10); // Results per page
   const [isSearching, setIsSearching] = useState(false); // Track if search is active
+  const [selectedTorrent, setSelectedTorrent] = useState<any | null>(null); // State for selected torrent
 
   const fetchResults = async () => {
     try {
