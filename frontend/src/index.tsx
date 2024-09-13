@@ -111,7 +111,7 @@ const App: React.FC = () => {
       <ul>
         {results && results.map((torrent: any) => (
           <li key={torrent.infohashHex}>
-            {torrent.name} - {torrent.length} bytes
+            {torrent.name} - {formatBytes(torrent.length)}
             <button onClick={() => handleTorrent(torrent.infohashHex)}>Details</button>
           </li>
         ))}
