@@ -9,7 +9,8 @@ const App: React.FC = () => {
   const [page, setPage] = useState(0); // Current page
   const [size, setSize] = useState(10); // Results per page
   const [isSearching, setIsSearching] = useState(false); // Track if search is active
-  const [selectedTorrent, setSelectedTorrent] = useState<any | null>(null); // State for selected torrent
+  const [selectedTorrent, setSelectedTorrent] = useState<any | null>(null);
+  const [showModal, setShowModal] = useState(false); // State to control modal visibility
 
   const fetchResults = async () => {
     try {
@@ -44,7 +45,8 @@ const App: React.FC = () => {
       const response = await fetch(`/torrent?h=${hash}`);
       if (!response.ok) throw new Error('Failed to fetch');
       const data = await response.json();
-      setSelectedTorrent(data.torrents[0]); // Assuming the response contains a single torrent
+      setSelectedTorrent(data.torrents[0]);
+      setShowModal(true); // Show the modal when a torrent is selected
     } catch (err) {
       setError((err as Error).message);
     }
@@ -129,13 +131,28 @@ const App: React.FC = () => {
           Next
         </button>
       </div>
+      {/* Modal for Torrent Details */}
       {selectedTorrent && (
-        <div className="mt-4">
-          <h2>Torrent Details</h2>
-          <p>Name: {selectedTorrent.name}</p>
-          <p>Size: {formatBytes(selectedTorrent.length)}</p>
-          <h3>Files:</h3>
-          {renderFiles(selectedTorrent.files)}
+        <div className={`modal ${showModal ? 'd-block' : 'd-none'}`} tabIndex={-1} role="dialog">
+          <div className="modal-dialog" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Torrent Details</h5>
+                <button type="button" className="close" onClick={() => setShowModal(false)} aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div className="modal-body">
+                <p>Name: {selectedTorrent.name}</p>
+                <p>Size: {formatBytes(selectedTorrent.length)}</p>
+                <h3>Files:</h3>
+                {renderFiles(selectedTorrent.files)}
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Close</button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
