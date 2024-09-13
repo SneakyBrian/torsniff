@@ -42,10 +42,47 @@ const App: React.FC = () => {
       const response = await fetch(`/torrent?h=${hash}`);
       if (!response.ok) throw new Error('Failed to fetch');
       const data = await response.json();
-      setResults(data.torrents);
+      setSelectedTorrent(data.torrents[0]); // Assuming the response contains a single torrent
     } catch (err) {
       setError((err as Error).message);
     }
+  };
+
+  const renderFiles = (files: any[]) => {
+    const fileTree: any = {};
+
+    files.forEach((file) => {
+      const parts = file.name.split('/');
+      let current = fileTree;
+
+      parts.forEach((part: string, index: number) => {
+        if (!current[part]) {
+          current[part] = index === parts.length - 1 ? file.length : {};
+        }
+        current = current[part];
+      });
+    });
+
+    const renderTree = (node: any, path: string[] = []) => {
+      return Object.entries(node).map(([key, value]) => {
+        const currentPath = [...path, key];
+        if (typeof value === 'number') {
+          return (
+            <li key={currentPath.join('/')}>
+              {key} - {value} bytes
+            </li>
+          );
+        }
+        return (
+          <li key={currentPath.join('/')}>
+            <strong>{key}</strong>
+            <ul>{renderTree(value, currentPath)}</ul>
+          </li>
+        );
+      });
+    };
+
+    return <ul>{renderTree(fileTree)}</ul>;
   };
 
   return (
@@ -77,6 +114,15 @@ const App: React.FC = () => {
           Next
         </button>
       </div>
+      {selectedTorrent && (
+        <div>
+          <h2>Torrent Details</h2>
+          <p>Name: {selectedTorrent.name}</p>
+          <p>Size: {selectedTorrent.length} bytes</p>
+          <h3>Files:</h3>
+          {renderFiles(selectedTorrent.files)}
+        </div>
+      )}
     </div>
   );
 };
