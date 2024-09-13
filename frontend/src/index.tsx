@@ -146,9 +146,9 @@ const App: React.FC = () => {
                 <p>Name: {selectedTorrent.name}</p>
                 <p>Size: {formatBytes(selectedTorrent.length)}</p>
                 <p>
-                  Magnet Link: 
+                  Link: 
                   <a href={`magnet:?xt=urn:btih:${selectedTorrent.infohashHex}`} target="_blank" rel="noopener noreferrer">
-                    {`magnet:?xt=urn:btih:${selectedTorrent.infohashHex}`}
+                    {"🧲"}
                   </a>
                 </p>
                 <h3>Files:</h3>
