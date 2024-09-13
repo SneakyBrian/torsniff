@@ -45,10 +45,9 @@ func (t *torrent) String() string {
 }
 
 func parseTorrent(meta []byte, infohashHex string) (*torrent, error) {
-    log.Printf("Parsing torrent for infohash: %s", infohashHex)
+	log.Printf("Parsing torrent for infohash: %s", infohashHex)
 	dict, err := bencode.Decode(bytes.NewBuffer(meta))
 	if err != nil {
-		log.Printf("Error fetching metadata: %v", err)
 		log.Printf("Error parsing torrent: %v", err)
 		return nil, err
 	}
@@ -162,7 +161,7 @@ func (t *torsniff) run() error {
 }
 
 func (t *torsniff) work(ac *announcement, tokens chan struct{}) {
-    log.Printf("Processing announcement for infohash: %s", ac.infohashHex)
+	log.Printf("Processing announcement for infohash: %s", ac.infohashHex)
 	defer func() {
 		<-tokens
 	}()
