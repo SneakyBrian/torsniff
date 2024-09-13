@@ -16,7 +16,7 @@ module.exports = {
                 test: /\.tsx?$/,
                 use: 'ts-loader',
                 exclude: /node_modules/,
-            }
+            },
             {
                 test: /\.js$/,
                 exclude: /node_modules/,
@@ -31,6 +31,7 @@ module.exports = {
                 test: /\.css$/,
                 use: ['style-loader', 'css-loader'],
             },
+        ]
     },
     plugins: [
         new HtmlWebpackPlugin({
