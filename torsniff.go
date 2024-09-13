@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -226,7 +226,7 @@ func (t *torsniff) isTorrentExist(infohashHex string) bool {
 }
 
 func main() {
-	log.SetFlags(0)
+	// log.SetFlags(0)
 
 	var addr string
 	var port uint16
@@ -270,7 +270,7 @@ func main() {
 	root.Flags().Uint16VarP(&port, "port", "p", 6881, "listen on given port")
 	root.Flags().IntVarP(&friends, "friends", "f", 500, "max fiends to make with per second")
 	root.Flags().IntVarP(&peers, "peers", "e", 400, "max peers to connect to download torrents")
-	root.Flags().DurationVarP(&timeout, "timeout", "t", 10*time.Second, "max time allowed for downloading torrents")
+	root.Flags().DurationVarP(&timeout, "timeout", "t", 30*time.Second, "max time allowed for downloading torrents")
 	root.Flags().BoolVarP(&verbose, "verbose", "v", true, "run in verbose mode")
 
 	if err := root.Execute(); err != nil {
