@@ -167,11 +167,13 @@ func (t *torsniff) work(ac *announcement, tokens chan struct{}) {
 	}()
 
 	if t.isTorrentExist(ac.infohashHex) {
+		log.Printf("infohash %s already exists", ac.infohashHex)
 		return
 	}
 
 	peerAddr := ac.peer.String()
 	if t.blacklist.has(peerAddr) {
+		log.Printf("peer %s already blacklisted", peerAddr)
 		return
 	}
 
@@ -180,12 +182,14 @@ func (t *torsniff) work(ac *announcement, tokens chan struct{}) {
 
 	meta, err := wire.fetch()
 	if err != nil {
+		log.Printf("adding peer %s to blacklist due to error: %v", peerAddr, err)
 		t.blacklist.add(peerAddr)
 		return
 	}
 
 	torrent, err := parseTorrent(meta, ac.infohashHex)
 	if err != nil {
+		log.Printf("error parsing torrent: %v", err)
 		return
 	}
 
@@ -200,8 +204,8 @@ func (t *torsniff) work(ac *announcement, tokens chan struct{}) {
 }
 
 func (t *torsniff) isTorrentExist(infohashHex string) bool {
-	_, err := index.GetInternal([]byte(infohashHex))
-	return err == nil
+	data, err := index.GetInternal([]byte(infohashHex))
+	return err == nil && len(data) > 0
 }
 
 func main() {

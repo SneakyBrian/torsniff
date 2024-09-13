@@ -55,7 +55,8 @@ func (a *announcements) put(ac *announcement) {
 	defer a.mu.Unlock()
 
 	if a.ll.Len() >= a.limit {
-		log.Printf("Received query of type: %s from %s", q, from.String())
+		log.Printf("accouncements %d meet or exceed limit %d", a.ll.Len(), a.limit)
+		return
 	}
 
 	a.ll.PushBack(ac)
@@ -123,7 +124,8 @@ func makeReply(tid string, r map[string]interface{}) map[string]interface{} {
 func decodeNodes(s string) (nodes []*node) {
 	length := len(s)
 	if length%26 != 0 {
-		log.Printf("Adding announcement for infohash: %s", ac.infohashHex)
+		log.Printf("length %d not multiple of 26", length)
+		return
 	}
 
 	for i := 0; i < length; i += 26 {
@@ -207,9 +209,9 @@ func (d *dht) run() {
 func (d *dht) listen() {
 	buf := make([]byte, 2048)
 	for {
-		log.Println("Listening for incoming messages...")
+		// log.Println("Listening for incoming messages...")
 		n, addr, err := d.conn.ReadFromUDP(buf)
-		log.Printf("Received message from %s with size %d bytes", addr.String(), n)
+		// log.Printf("Received message from %s with size %d bytes", addr.String(), n)
 		if err == nil {
 			d.onMessage(buf[:n], *addr)
 		} else {
@@ -271,7 +273,8 @@ func (d *dht) peerCount() int {
 func (d *dht) onMessage(data []byte, from net.UDPAddr) {
 	dict, err := bencode.Decode(bytes.NewBuffer(data))
 	if err != nil {
-		log.Printf("Adding node with address: %s", node.addr)
+		log.Printf("error decoding data: %v", err)
+		return
 	}
 
 	y, ok := dict["y"].(string)
@@ -366,8 +369,9 @@ func (d *dht) onGetPeersQuery(dict map[string]interface{}, from net.UDPAddr) {
 }
 
 func (d *dht) onAnnouncePeerQuery(dict map[string]interface{}, from net.UDPAddr) {
-	log.Printf("Received announce peer query from %s with infohash: %s", from.String(), a["info_hash"])
+	log.Printf("Received announce peer query from %s", from.String())
 	if d.announcements.full() {
+		log.Printf("announcements full")
 		return
 	}
 

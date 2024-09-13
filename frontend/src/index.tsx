@@ -53,9 +53,9 @@ const App: React.FC = () => {
       {error && <p style={{ color: 'red' }}>{error}</p>}
       <ul>
         {results && results.map((torrent: any) => (
-          <li key={torrent.InfohashHex}>
-            {torrent.Name} - {torrent.Length} bytes
-            <button onClick={() => handleTorrent(torrent.InfohashHex)}>Details</button>
+          <li key={torrent.infohashHex}>
+            {torrent.name} - {torrent.length} bytes
+            <button onClick={() => handleTorrent(torrent.infohashHex)}>Details</button>
           </li>
         ))}
       </ul>
