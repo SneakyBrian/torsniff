@@ -49,6 +49,16 @@ const App: React.FC = () => {
     }
   };
 
+  // Utility function to format bytes
+  const formatBytes = (bytes: number, decimals = 2) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  };
+
   const renderFiles = (files: any[]) => {
     const fileTree: any = {};
 
@@ -70,7 +80,7 @@ const App: React.FC = () => {
         if (typeof value === 'number') {
           return (
             <li key={currentPath.join('/')}>
-              {key} - {value} bytes
+              {key} - {formatBytes(value)} {/* Use the formatBytes function here */}
             </li>
           );
         }
@@ -119,7 +129,7 @@ const App: React.FC = () => {
         <div>
           <h2>Torrent Details</h2>
           <p>Name: {selectedTorrent.name}</p>
-          <p>Size: {selectedTorrent.length} bytes</p>
+          <p>Size: {formatBytes(selectedTorrent.length)}</p> {/* Use the formatBytes function here */}
           <h3>Files:</h3>
           {renderFiles(selectedTorrent.files)}
         </div>
