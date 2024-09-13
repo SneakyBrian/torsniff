@@ -6,6 +6,9 @@
     "build": "webpack --mode production",
     "postbuild": "cpx dist/* ../static/"
   },
+  "dependencies": {
+    "bootstrap": "^5.3.0"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

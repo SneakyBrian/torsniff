@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import { createRoot } from 'react-dom/client';
 
 const App: React.FC = () => {
@@ -97,39 +98,42 @@ const App: React.FC = () => {
   };
 
   return (
-    <div>
-      <h1>Welcome to Torrent Search</h1>
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search for torrents"
-      />
-      <button onClick={handleSearch}>Search</button>
-      <button onClick={handleAll}>Get All Torrents</button>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <ul>
+    <div className="container mt-5">
+      <h1 className="text-center mb-4">Welcome to Torrent Search</h1>
+      <div className="input-group mb-3">
+        <input
+          type="text"
+          className="form-control"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search for torrents"
+        />
+        <button className="btn btn-primary" onClick={handleSearch}>Search</button>
+        <button className="btn btn-secondary" onClick={handleAll}>Get All Torrents</button>
+      </div>
+      {error && <p className="text-danger">{error}</p>}
+      <ul className="list-group mb-3">
         {results && results.map((torrent: any) => (
-          <li key={torrent.infohashHex}>
+          <li key={torrent.infohashHex} className="list-group-item d-flex justify-content-between align-items-center">
             {torrent.name} - {formatBytes(torrent.length)}
-            <button onClick={() => handleTorrent(torrent.infohashHex)}>Details</button>
+            <button className="btn btn-link" onClick={() => handleTorrent(torrent.infohashHex)}>Details</button>
           </li>
         ))}
       </ul>
-      <div>
-        <button onClick={() => setPage((prev) => Math.max(prev - 1, 0))} disabled={page === 0}>
+      <div className="d-flex justify-content-between">
+        <button className="btn btn-outline-primary" onClick={() => setPage((prev) => Math.max(prev - 1, 0))} disabled={page === 0}>
           Previous
         </button>
         <span>Page {page + 1}</span>
-        <button onClick={() => setPage((prev) => prev + 1)}>
+        <button className="btn btn-outline-primary" onClick={() => setPage((prev) => prev + 1)}>
           Next
         </button>
       </div>
       {selectedTorrent && (
-        <div>
+        <div className="mt-4">
           <h2>Torrent Details</h2>
           <p>Name: {selectedTorrent.name}</p>
-          <p>Size: {formatBytes(selectedTorrent.length)}</p> {/* Use the formatBytes function here */}
+          <p>Size: {formatBytes(selectedTorrent.length)}</p>
           <h3>Files:</h3>
           {renderFiles(selectedTorrent.files)}
         </div>
