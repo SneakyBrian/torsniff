@@ -7,6 +7,7 @@ import (
 	"crypto/sha1"
 	"encoding/binary"
 	"encoding/hex"
+	"log"
 	"net"
 	"strconv"
 	"sync"
@@ -361,7 +362,7 @@ func (d *dht) onGetPeersQuery(dict map[string]interface{}, from net.UDPAddr) {
 }
 
 func (d *dht) onAnnouncePeerQuery(dict map[string]interface{}, from net.UDPAddr) {
-    log.Printf("Received announce peer query from %s", from.String())
+	log.Printf("Received announce peer query from %s", from.String())
 	if d.announcements.full() {
 		return
 	}
