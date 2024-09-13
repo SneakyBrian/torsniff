@@ -244,7 +244,7 @@ func main() {
 	}
 	root.RunE = func(cmd *cobra.Command, args []string) error {
 
-		log.SetOutput(ioutil.Discard)
+		log.SetOutput(io.Discard)
 		if verbose {
 			log.SetOutput(os.Stdout)
 		}
