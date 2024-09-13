@@ -177,12 +177,29 @@ func (t *torsniff) work(ac *announcement, tokens chan struct{}) {
 		return
 	}
 
-	wire := newMetaWire(string(ac.infohash), peerAddr, t.timeout)
-	defer wire.free()
+	const maxRetries = 3
+	var meta []byte
+	var err error
 
-	meta, err := wire.fetch()
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		wire := newMetaWire(string(ac.infohash), peerAddr, t.timeout)
+		defer wire.free()
+
+		meta, err = wire.fetch()
+		if err == nil {
+			break
+		}
+
+		log.Printf("Attempt %d to fetch meta failed for peer %s: %v", attempt, peerAddr, err)
+
+		// Exponential backoff delay
+		backoffDuration := time.Duration(attempt*attempt) * time.Second
+		log.Printf("Waiting for %v before retrying...", backoffDuration)
+		time.Sleep(backoffDuration)
+	}
+
 	if err != nil {
-		log.Printf("adding peer %s to blacklist due to error: %v", peerAddr, err)
+		log.Printf("adding peer %s to blacklist after %d failed attempts", peerAddr, maxRetries)
 		t.blacklist.add(peerAddr)
 		return
 	}
