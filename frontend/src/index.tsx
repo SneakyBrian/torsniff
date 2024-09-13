@@ -7,8 +7,35 @@ const App: React.FC = () => {
   const [error, setError] = useState('');
   const [page, setPage] = useState(0); // Current page
   const [size, setSize] = useState(10); // Results per page
+  const [isSearching, setIsSearching] = useState(false); // Track if search is active
 
-  const handleSearch = async () => {
+  const fetchResults = async () => {
+    try {
+      const endpoint = isSearching ? `/query?q=${query}` : '/all';
+      const response = await fetch(`${endpoint}&f=${page * size}&s=${size}`);
+      if (!response.ok) throw new Error('Failed to fetch');
+      const data = await response.json();
+      setResults(data.torrents);
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
+
+  useEffect(() => {
+    fetchResults();
+  }, [page]); // Fetch results when the page changes
+
+  const handleSearch = () => {
+    setIsSearching(true);
+    setPage(0); // Reset to first page
+    fetchResults();
+  };
+
+  const handleAll = () => {
+    setIsSearching(false);
+    setPage(0); // Reset to first page
+    fetchResults();
+  };
     try {
       const response = await fetch(`/query?q=${query}&f=${page * size}&s=${size}`);
       if (!response.ok) throw new Error('Failed to fetch');
