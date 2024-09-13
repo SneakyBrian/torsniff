@@ -5,10 +5,12 @@ const App: React.FC = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [error, setError] = useState('');
+  const [page, setPage] = useState(0); // Current page
+  const [size, setSize] = useState(10); // Results per page
 
   const handleSearch = async () => {
     try {
-      const response = await fetch(`/query?q=${query}`);
+      const response = await fetch(`/query?q=${query}&f=${page * size}&s=${size}`);
       if (!response.ok) throw new Error('Failed to fetch');
       const data = await response.json();
       setResults(data.torrents);
@@ -19,7 +21,7 @@ const App: React.FC = () => {
 
   const handleAll = async () => {
     try {
-      const response = await fetch('/all');
+      const response = await fetch(`/all?f=${page * size}&s=${size}`);
       if (!response.ok) throw new Error('Failed to fetch');
       const data = await response.json();
       setResults(data.torrents);
@@ -59,6 +61,15 @@ const App: React.FC = () => {
           </li>
         ))}
       </ul>
+      <div>
+        <button onClick={() => setPage((prev) => Math.max(prev - 1, 0))} disabled={page === 0}>
+          Previous
+        </button>
+        <span>Page {page + 1}</span>
+        <button onClick={() => setPage((prev) => prev + 1)}>
+          Next
+        </button>
+      </div>
     </div>
   );
 };
