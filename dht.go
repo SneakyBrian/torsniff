@@ -7,7 +7,6 @@ import (
 	"crypto/sha1"
 	"encoding/binary"
 	"encoding/hex"
-	"fmt"
 	"log"
 	"net"
 	"strconv"
