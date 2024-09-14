@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"net"
 	"os"
 	"os/signal"
@@ -193,7 +194,7 @@ func (t *torsniff) work(ac *announcement, tokens chan struct{}) {
 		log.Printf("Attempt %d to fetch meta failed for peer %s: %v", attempt, peerAddr, err)
 
 		// Exponential backoff delay
-		backoffDuration := time.Duration(attempt*attempt) * time.Second
+		backoffDuration := time.Duration(math.Pow(2, float64(attempt))) * time.Second
 		log.Printf("Waiting for %v before retrying...", backoffDuration)
 		time.Sleep(backoffDuration)
 	}
