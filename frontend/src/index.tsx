@@ -159,7 +159,6 @@ const App: React.FC = () => {
             {torrent.name} - {formatBytes(torrent.length)}
             <div>
               <button className="btn btn-link" onClick={() => handleTorrent(torrent.infohashHex)}>Details</button>
-              <button className="btn btn-danger" onClick={() => confirmDelete(torrent.infohashHex)}>Delete</button>
             </div>
           </li>
         ))}
@@ -183,6 +182,7 @@ const App: React.FC = () => {
                 <button type="button" className="close" onClick={() => setShowModal(false)} aria-label="Close">
                   <span aria-hidden="true">&times;</span>
                 </button>
+                <button type="button" className="btn btn-danger" onClick={() => confirmDelete(selectedTorrent.infohashHex)}>Delete</button>
               </div>
               <div className="modal-body">
                 <p>Name: {selectedTorrent.name}</p>
