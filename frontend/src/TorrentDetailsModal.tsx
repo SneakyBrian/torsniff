@@ -22,9 +22,6 @@ const TorrentDetailsModal: React.FC<TorrentDetailsModalProps> = ({
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title">Torrent Details</h5>
-            <button type="button" className="close" onClick={() => setShowModal(false)} aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
           </div>
           <div className="modal-body">
             <p>Name: {selectedTorrent.name}</p>
