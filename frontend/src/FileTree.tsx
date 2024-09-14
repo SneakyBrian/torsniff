@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { formatBytes } from './index';
+import { formatBytes } from './utils';
 
 const FileTree: React.FC<{ files: any[] }> = ({ files }) => {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());

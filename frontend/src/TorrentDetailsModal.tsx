@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { formatBytes } from './index';
+import { formatBytes } from './utils';
 
 const FileTree = React.lazy(() => import('./FileTree'));
 
