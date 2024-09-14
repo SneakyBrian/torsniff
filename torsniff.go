@@ -114,6 +114,7 @@ type torsniff struct {
 	secret     string
 	timeout    time.Duration
 	blacklist  *blackList
+	maxRetries int // New field for max retries
 }
 
 func (t *torsniff) run() error {
@@ -177,11 +178,10 @@ func (t *torsniff) work(ac *announcement, tokens chan struct{}) {
 		return
 	}
 
-	const maxRetries = 3
 	var meta []byte
 	var err error
 
-	for attempt := 1; attempt <= maxRetries; attempt++ {
+	for attempt := 1; attempt <= t.maxRetries; attempt++ { // Use the maxRetries field
 		wire := newMetaWire(string(ac.infohash), peerAddr, t.timeout)
 		defer wire.free()
 
@@ -199,7 +199,7 @@ func (t *torsniff) work(ac *announcement, tokens chan struct{}) {
 	}
 
 	if err != nil {
-		log.Printf("adding peer %s to blacklist after %d failed attempts", peerAddr, maxRetries)
+		log.Printf("adding peer %s to blacklist after %d failed attempts", peerAddr, t.maxRetries)
 		t.blacklist.add(peerAddr)
 		return
 	}
@@ -235,6 +235,7 @@ func main() {
 	var verbose bool
 	var friends int
 	var httpPort int // New variable for HTTP port
+	var maxRetries int
 
 	fmt.Println("starting...")
 
@@ -259,6 +260,7 @@ func main() {
 			maxPeers:   peers,
 			secret:     string(randBytes(20)),
 			blacklist:  newBlackList(5*time.Minute, 50000),
+			maxRetries: maxRetries,
 		}
 		go p.run()
 
@@ -273,7 +275,8 @@ func main() {
 	root.Flags().IntVarP(&peers, "peers", "e", 400, "max peers to connect to download torrents")
 	root.Flags().DurationVarP(&timeout, "timeout", "t", 30*time.Second, "max time allowed for downloading torrents")
 	root.Flags().BoolVarP(&verbose, "verbose", "v", true, "run in verbose mode")
-	root.Flags().IntVarP(&httpPort, "http-port", "H", 8090, "HTTP server port") // New flag for HTTP port
+	root.Flags().IntVarP(&httpPort, "http-port", "H", 8090, "HTTP server port")
+	root.Flags().IntVarP(&maxRetries, "max-retries", "r", 3, "maximum number of retries to fetch metadata") // New flag for max retries
 
 	if err := root.Execute(); err != nil {
 		log.Fatal(fmt.Errorf("could not start: %s", err))
