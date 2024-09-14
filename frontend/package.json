@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "start": "webpack serve --mode development",
-    "prebuild": "rimraf ../static",
+    "prebuild": "rimraf ../static && rimraf dist",
     "build": "webpack --mode production",
     "postbuild": "cpx dist/* ../static/"
   },
