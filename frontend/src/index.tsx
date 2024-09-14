@@ -22,9 +22,11 @@ const App: React.FC = () => {
       const response = await fetch(`${endpoint}&f=${page * size}&s=${size}`);
       if (!response.ok) throw new Error('Failed to fetch');
       const data = await response.json();
-      setResults(data.torrents);
+      // Check if torrents is null and set results accordingly
+      const torrents = data.torrents || [];
+      setResults(torrents);
       // Check if the number of results is less than the page size
-      setHasMoreResults(data.torrents.length === size);
+      setHasMoreResults(torrents.length === size);
     } catch (err) { 
       setError((err as Error).message);
     }
