@@ -8,9 +8,33 @@
     .modal.d-block {
       background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
     }
+
+    .modal-body {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden; /* Ensure the body itself doesn't scroll */
+    }
+
+    .files-section {
+      flex: 1;
+      overflow-y: auto; /* Make only the files section scrollable */
+      margin-top: 1rem; /* Add some margin for better spacing */
+      max-height: 50vh; /* Ensure the files section has a maximum height */
+    }
+
+    .modal-dialog {
+      max-height: 90vh; /* Restrict the modal height to 90% of the viewport height */
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-content {
+      flex: 1;
+      overflow: hidden;
+    }
   </style>
 </head>
 <body>
    <div id="root"></div>
- </body>
- </html>
+</body>
+</html>

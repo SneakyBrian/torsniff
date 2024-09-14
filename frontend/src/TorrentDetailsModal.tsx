@@ -36,9 +36,11 @@ const TorrentDetailsModal: React.FC<TorrentDetailsModalProps> = ({
               </a>
             </p>
             <h3>Files:</h3>
-            <Suspense fallback={<div>Loading files...</div>}>
-              <FileTree files={selectedTorrent.files} />
-            </Suspense>
+            <div className="files-section">
+              <Suspense fallback={<div>Loading files...</div>}>
+                <FileTree files={selectedTorrent.files} />
+              </Suspense>
+            </div>
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-danger" onClick={() => confirmDelete(selectedTorrent.infohashHex)}>Delete</button>
