@@ -1,4 +1,13 @@
 #!/bin/bash
+# Build the frontend
+cd frontend
+npm install
+npm run build
+cd ..
+
+# Ensure Go dependencies are up to date
+go mod tidy
+
 GOARCH=amd64 GOOS=linux go build -o releases/torsniff-${VERSION}-linux-amd64
 GOARCH=386 GOOS=linux go build -o releases/torsniff-${VERSION}-linux-386
 
