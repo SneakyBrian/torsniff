@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { createRoot } from 'react-dom/client';
 
@@ -90,70 +90,10 @@ const App: React.FC = () => {
       }
     }
   };
-  const formatBytes = (bytes: number, decimals = 2) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-  };
 
-  const FileTree: React.FC<{ files: any[] }> = ({ files }) => {
-    const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
-    const toggleFolder = (path: string) => {
-      setExpandedFolders((prev) => {
-        const newSet = new Set(prev);
-        if (newSet.has(path)) {
-          newSet.delete(path);
-        } else {
-          newSet.add(path);
-        }
-        return newSet;
-      });
-    };
 
-    const fileTree: any = {};
-
-    files.forEach((file) => {
-      const parts = file.name.split('/');
-      let current = fileTree;
-
-      parts.forEach((part: string, index: number) => {
-        if (!current[part]) {
-          current[part] = index === parts.length - 1 ? file.length : {};
-        }
-        current = current[part];
-      });
-    });
-
-    const renderTree = (node: any, path: string[] = []) => {
-      return Object.entries(node).map(([key, value]) => {
-        const currentPath = [...path, key].join('/');
-        const isExpanded = expandedFolders.has(currentPath);
-
-        if (typeof value === 'number') {
-          return (
-            <li key={currentPath}>
-              {key} - {formatBytes(value)}
-            </li>
-          );
-        }
-
-        return (
-          <li key={currentPath}>
-            <span onClick={() => toggleFolder(currentPath)} style={{ cursor: 'pointer' }}>
-              {isExpanded ? '▼' : '▶'} <strong>{key}</strong>
-            </span>
-            {isExpanded && <ul>{renderTree(value, [...path, key])}</ul>}
-          </li>
-        );
-      });
-    };
-
-    return <ul>{renderTree(fileTree)}</ul>;
-  };
+  const FileTree = React.lazy(() => import('./FileTree'));
 
   return (
     <div className="container mt-5">
@@ -217,7 +157,9 @@ const App: React.FC = () => {
                   </a>
                 </p>
                 <h3>Files:</h3>
-                <FileTree files={selectedTorrent.files} />
+                <Suspense fallback={<div>Loading files...</div>}>
+                  <FileTree files={selectedTorrent.files} />
+                </Suspense>
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-danger" onClick={() => confirmDelete(selectedTorrent.infohashHex)}>Delete</button>
@@ -260,3 +202,12 @@ if (container) {
 } else {
   console.error("Root container not found");
 }
+
+export const formatBytes = (bytes: number, decimals = 2) => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+};
