@@ -45,6 +45,10 @@ Flags:
 * 允许 UDP 流量通过防火墙
 * 你的 ISP/主机商允许 BitTorrent 流量（torsniff-search 在 [vultr.com](https://www.vultr.com/?ref=7172229) 能良好运行）
 
+### UPnP 支持
+
+该应用程序现在支持 UPnP（通用即插即用），可以在兼容的路由器上自动配置端口转发。这一功能有助于在 NAT 或防火墙后运行应用程序时更轻松地建立连接。
+
 ## 前端设置
 
 要设置前端，请导航到 `frontend` 目录并运行：

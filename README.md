@@ -45,6 +45,10 @@ Use default flags:
 * Allow UDP traffic get through firewall
 * Your ISP/Hosting Provider allows BitTorrent traffic(torsniff-search works on [vultr.com](https://www.vultr.com/?ref=7172229))
 
+### UPnP Support
+
+The application now supports UPnP (Universal Plug and Play) to automatically configure port forwarding on compatible routers. This feature helps in establishing connections more easily when running the application behind a NAT or firewall.
+
 ## Frontend Setup
 
 To set up the frontend, navigate to the `frontend` directory and run:
