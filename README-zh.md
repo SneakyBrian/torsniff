@@ -43,6 +43,17 @@ Flags:
 * 允许 UDP 流量通过防火墙
 * 你的 ISP/主机商允许 BitTorrent 流量（torsniff-search 在 [vultr.com](https://www.vultr.com/?ref=7172229) 能良好运行）
 
+## 前端设置
+
+要设置前端，请导航到 `frontend` 目录并运行：
+
+```bash
+npm install
+npm run build
+```
+
+这将构建前端资产并将其放置在 `../static` 目录中。
+
 ## 协议
 - [DHT Protocol](http://www.bittorrent.org/beps/bep_0005.html)
 - [The BitTorrent Protocol Specification](http://www.bittorrent.org/beps/bep_0003.html)

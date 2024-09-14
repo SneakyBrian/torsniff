@@ -43,6 +43,17 @@ Use default flags:
 * Allow UDP traffic get through firewall
 * Your ISP/Hosting Provider allows BitTorrent traffic(torsniff-search works on [vultr.com](https://www.vultr.com/?ref=7172229))
 
+## Frontend Setup
+
+To set up the frontend, navigate to the `frontend` directory and run:
+
+```bash
+npm install
+npm run build
+```
+
+This will build the frontend assets and place them in the `../static` directory.
+
 ## Protocols
 - [DHT Protocol](http://www.bittorrent.org/beps/bep_0005.html)
 - [The BitTorrent Protocol Specification](http://www.bittorrent.org/beps/bep_0003.html)
