@@ -29,6 +29,8 @@ Flags:
   -p, --port uint16        listen on given port (default 6881)
   -t, --timeout duration   max time allowed for downloading torrents (default 10s)
   -v, --verbose            run in verbose mode (default true)
+  -H, --http-port int      HTTP server port (default 8090)
+  -r, --max-retries int    maximum number of retries to fetch metadata (default 3)
 ```
 
 ## 快速开始
