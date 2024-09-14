@@ -6,13 +6,13 @@ const App: React.FC = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [error, setError] = useState('');
-  const [page, setPage] = useState(0); // Current page
-  const [size, setSize] = useState(10); // Results per page
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
   const [totalCount, setTotalCount] = useState<number | null>(null);
-  const [isSearching, setIsSearching] = useState(false); // Track if search is active
+  const [isSearching, setIsSearching] = useState(false);
   const [hasMoreResults, setHasMoreResults] = useState(true);
   const [selectedTorrent, setSelectedTorrent] = useState<any | null>(null);
-  const [showModal, setShowModal] = useState(false); // State to control modal visibility
+  const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [torrentToDelete, setTorrentToDelete] = useState<string | null>(null);
 
@@ -93,7 +93,8 @@ const App: React.FC = () => {
 
 
 
-  const FileTree = React.lazy(() => import('./FileTree'));
+  const TorrentDetailsModal = React.lazy(() => import('./TorrentDetailsModal'));
+  const DeleteConfirmationModal = React.lazy(() => import('./DeleteConfirmationModal'));
 
   return (
     <div className="container mt-5">
@@ -136,61 +137,23 @@ const App: React.FC = () => {
           Next
         </button>
       </div>
-      {/* Modal for Torrent Details */}
-      {selectedTorrent && (
-        <div className={`modal ${showModal ? 'd-block' : 'd-none'}`} tabIndex={-1} role="dialog">
-          <div className="modal-dialog" role="document">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Torrent Details</h5>
-                <button type="button" className="close" onClick={() => setShowModal(false)} aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-              <div className="modal-body">
-                <p>Name: {selectedTorrent.name}</p>
-                <p>Size: {formatBytes(selectedTorrent.length)}</p>
-                <p>
-                  Link: 
-                  <a href={`magnet:?xt=urn:btih:${selectedTorrent.infohashHex}`} target="_blank" rel="noopener noreferrer">
-                    {"🧲"}
-                  </a>
-                </p>
-                <h3>Files:</h3>
-                <Suspense fallback={<div>Loading files...</div>}>
-                  <FileTree files={selectedTorrent.files} />
-                </Suspense>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-danger" onClick={() => confirmDelete(selectedTorrent.infohashHex)}>Delete</button>
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Close</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Modal for Delete Confirmation */}
-      {showDeleteModal && (
-        <div className="modal d-block" tabIndex={-1} role="dialog">
-          <div className="modal-dialog" role="document">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Confirm Deletion</h5>
-                <button type="button" className="close" onClick={() => setShowDeleteModal(false)} aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-              <div className="modal-body">
-                <p>Are you sure you want to delete this torrent?</p>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowDeleteModal(false)}>Cancel</button>
-                <button type="button" className="btn btn-danger" onClick={handleDelete}>Delete</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <Suspense fallback={<div>Loading...</div>}>
+        {selectedTorrent && (
+          <TorrentDetailsModal
+            selectedTorrent={selectedTorrent}
+            showModal={showModal}
+            setShowModal={setShowModal}
+            confirmDelete={confirmDelete}
+          />
+        )}
+        {showDeleteModal && (
+          <DeleteConfirmationModal
+            showDeleteModal={showDeleteModal}
+            setShowDeleteModal={setShowDeleteModal}
+            handleDelete={handleDelete}
+          />
+        )}
+      </Suspense>
     </div>
   );
 };
