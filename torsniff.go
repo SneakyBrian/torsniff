@@ -241,8 +241,8 @@ func main() {
 	fmt.Println("starting...")
 
 	root := &cobra.Command{
-		Use:          "torsniff-search",
-		Short:        "torsniff-search - A sniffer that sniffs torrents from BitTorrent network.",
+		Use:          "torsniff",
+		Short:        "torsniff - A sniffer that sniffs torrents from BitTorrent network.",
 		SilenceUsage: true,
 	}
 	root.RunE = func(cmd *cobra.Command, args []string) error {

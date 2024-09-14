@@ -1,30 +1,30 @@
-torsniff-search - a sniffer that sniffs torrents from BitTorrent network
+torsniff - a sniffer that sniffs torrents from BitTorrent network
 ======================================
 
 
 **English** | [简体中文](./README-zh.md)
 
 ## Introduction
-torsniff-search is a torrent sniffer, it sniffs torrents that people are using to download movies, music, docs, games and so on from BitTorrent network.
+torsniff is a torrent sniffer, it sniffs torrents that people are using to download movies, music, docs, games and so on from BitTorrent network.
 
-A torrent has valuable information, so you can use torsniff-search to build your own torrent database(e.g: The Pirate Bay), or to do data mining and analyzing.
+A torrent has valuable information, so you can use torsniff to build your own torrent database(e.g: The Pirate Bay), or to do data mining and analyzing.
 
 
 ## Installation
 
-Just download latest torsniff-search from [releases](https://github.com/fanpei91/torsniff-search/releases) directly. 
+Just download latest torsniff from [releases](https://github.com/fanpei91/torsniff/releases) directly. 
 
 ## Usage
 
 ```
-$ ./torsniff-search -h
+$ ./torsniff -h
 
 Usage:
-  torsniff-search [flags]
+  torsniff [flags]
 
 Flags:
   -a, --addr string        listen on given address (default all, ipv4 and ipv6)
-  -h, --help               help for torsniff-search
+  -h, --help               help for torsniff
   -f, --friends int        max fiends to make with per second (default 500)
   -e, --peers int          max peers to connect to download torrents (default 400)
   -p, --port uint16        listen on given port (default 6881)
@@ -37,13 +37,13 @@ Flags:
 ## Quick start
 Use default flags:
 
-`./torsniff-search`
+`./torsniff`
 
 ## Requirements
 
 * A host having a public IP(recommended), or UDP port forwarding/port mapping in private network/NAT
 * Allow UDP traffic get through firewall
-* Your ISP/Hosting Provider allows BitTorrent traffic(torsniff-search works on [vultr.com](https://www.vultr.com/?ref=7172229))
+* Your ISP/Hosting Provider allows BitTorrent traffic(torsniff works on [vultr.com](https://www.vultr.com/?ref=7172229))
 
 ### UPnP Support
 
