@@ -9,6 +9,7 @@ const App: React.FC = () => {
   const [page, setPage] = useState(0); // Current page
   const [size, setSize] = useState(10); // Results per page
   const [isSearching, setIsSearching] = useState(false); // Track if search is active
+  const [hasMoreResults, setHasMoreResults] = useState(true);
   const [selectedTorrent, setSelectedTorrent] = useState<any | null>(null);
   const [showModal, setShowModal] = useState(false); // State to control modal visibility
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -21,7 +22,9 @@ const App: React.FC = () => {
       if (!response.ok) throw new Error('Failed to fetch');
       const data = await response.json();
       setResults(data.torrents);
-    } catch (err) {
+      // Check if the number of results is less than the page size
+      setHasMoreResults(data.torrents.length === size);
+    } catch (err) { 
       setError((err as Error).message);
     }
   };
@@ -169,7 +172,11 @@ const App: React.FC = () => {
           Previous
         </button>
         <span>Page {page + 1}</span>
-        <button className="btn btn-outline-primary" onClick={() => setPage((prev) => prev + 1)}>
+        <button
+          className="btn btn-outline-primary"
+          onClick={() => setPage((prev) => prev + 1)}
+          disabled={!hasMoreResults}
+        >
           Next
         </button>
       </div>
