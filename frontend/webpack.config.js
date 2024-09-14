@@ -2,6 +2,7 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const TerserPlugin = require('terser-webpack-plugin');
+const CompressionPlugin = require('compression-webpack-plugin');
 
 module.exports = {
     entry: './src/index.tsx',
@@ -43,6 +44,13 @@ module.exports = {
         new BundleAnalyzerPlugin({
             analyzerMode: 'static',
             openAnalyzer: false,
+        }),
+        new CompressionPlugin({
+            filename: '[path][base].gz',
+            algorithm: 'gzip',
+            test: /\.(js|css|html|svg)$/,
+            threshold: 10240,
+            minRatio: 0.8,
         }),
     ],
     optimization: {
