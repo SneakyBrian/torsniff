@@ -8,6 +8,7 @@ const App: React.FC = () => {
   const [error, setError] = useState('');
   const [page, setPage] = useState(0); // Current page
   const [size, setSize] = useState(10); // Results per page
+  const [totalCount, setTotalCount] = useState<number | null>(null);
   const [isSearching, setIsSearching] = useState(false); // Track if search is active
   const [hasMoreResults, setHasMoreResults] = useState(true);
   const [selectedTorrent, setSelectedTorrent] = useState<any | null>(null);
@@ -30,6 +31,18 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
+    const fetchTotalCount = async () => {
+      try {
+        const response = await fetch('/count');
+        if (!response.ok) throw new Error('Failed to fetch total count');
+        const data = await response.json();
+        setTotalCount(data.totalCount);
+      } catch (err) {
+        setError((err as Error).message);
+      }
+    };
+
+    fetchTotalCount();
     fetchResults();
   }, [page]); // Fetch results when the page changes
 
@@ -145,6 +158,9 @@ const App: React.FC = () => {
   return (
     <div className="container mt-5">
       <h1 className="text-center mb-4">Welcome to Torrent Search</h1>
+      {totalCount !== null && (
+        <p className="text-center">Total Torrents Indexed: {totalCount}</p>
+      )}
       <div className="input-group mb-3">
         <input
           type="text"

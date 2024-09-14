@@ -144,18 +144,34 @@ func torrentHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
-    hashes := r.URL.Query()["h"]
+	hashes := r.URL.Query()["h"]
 
-    for _, hash := range hashes {
-        err := index.Delete(hash)
-        if err != nil {
-            http.Error(w, err.Error(), http.StatusInternalServerError)
-            log.Println(err)
-            return
-        }
-    }
+	for _, hash := range hashes {
+		err := index.Delete(hash)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Println(err)
+			return
+		}
+	}
 
-    w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusOK)
+}
+
+func countHandler(w http.ResponseWriter, r *http.Request) {
+	docCount, err := index.DocCount()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		return
+	}
+
+	response := map[string]uint64{"totalCount": docCount}
+	err = json.NewEncoder(w).Encode(response)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+	}
 }
 
 func startHTTP(port int) {
@@ -164,6 +180,7 @@ func startHTTP(port int) {
 	http.HandleFunc("/torrent", Gzip(torrentHandler))
 	http.HandleFunc("/all", Gzip(allHandler))
 	http.HandleFunc("/delete", Gzip(deleteHandler)) // Register the delete handler
+	http.HandleFunc("/count", Gzip(countHandler))   // Register the count handler
 
 	// Create a file system from the embedded files
 	staticFS, err := fs.Sub(staticFiles, "static")
