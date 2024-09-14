@@ -11,6 +11,8 @@ const App: React.FC = () => {
   const [isSearching, setIsSearching] = useState(false); // Track if search is active
   const [selectedTorrent, setSelectedTorrent] = useState<any | null>(null);
   const [showModal, setShowModal] = useState(false); // State to control modal visibility
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [torrentToDelete, setTorrentToDelete] = useState<string | null>(null);
 
   const fetchResults = async () => {
     try {
@@ -52,13 +54,20 @@ const App: React.FC = () => {
     }
   };
 
-  const handleDelete = async (hash: string) => {
-    if (window.confirm("Are you sure you want to delete this torrent?")) {
+  const confirmDelete = (hash: string) => {
+    setTorrentToDelete(hash);
+    setShowDeleteModal(true);
+  };
+
+  const handleDelete = async () => {
+    if (torrentToDelete) {
       try {
-        const response = await fetch(`/delete?h=${hash}`, { method: 'DELETE' });
+        const response = await fetch(`/delete?h=${torrentToDelete}`, { method: 'DELETE' });
         if (!response.ok) throw new Error('Failed to delete');
         // Refresh the results after deletion
         fetchResults();
+        setShowDeleteModal(false); // Close the modal
+        setTorrentToDelete(null); // Reset the torrent to delete
       } catch (err) {
         setError((err as Error).message);
       }
@@ -150,7 +159,7 @@ const App: React.FC = () => {
             {torrent.name} - {formatBytes(torrent.length)}
             <div>
               <button className="btn btn-link" onClick={() => handleTorrent(torrent.infohashHex)}>Details</button>
-              <button className="btn btn-danger" onClick={() => handleDelete(torrent.infohashHex)}>Delete</button>
+              <button className="btn btn-danger" onClick={() => confirmDelete(torrent.infohashHex)}>Delete</button>
             </div>
           </li>
         ))}
@@ -189,6 +198,28 @@ const App: React.FC = () => {
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal for Delete Confirmation */}
+      {showDeleteModal && (
+        <div className="modal d-block" tabIndex={-1} role="dialog">
+          <div className="modal-dialog" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Confirm Deletion</h5>
+                <button type="button" className="close" onClick={() => setShowDeleteModal(false)} aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div className="modal-body">
+                <p>Are you sure you want to delete this torrent?</p>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowDeleteModal(false)}>Cancel</button>
+                <button type="button" className="btn btn-danger" onClick={handleDelete}>Delete</button>
               </div>
             </div>
           </div>
