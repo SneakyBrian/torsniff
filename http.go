@@ -143,11 +143,27 @@ func torrentHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func deleteHandler(w http.ResponseWriter, r *http.Request) {
+    hashes := r.URL.Query()["h"]
+
+    for _, hash := range hashes {
+        err := index.Delete(hash)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            log.Println(err)
+            return
+        }
+    }
+
+    w.WriteHeader(http.StatusOK)
+}
+
 func startHTTP(port int) {
 
 	http.HandleFunc("/query", Gzip(searchHandler))
 	http.HandleFunc("/torrent", Gzip(torrentHandler))
 	http.HandleFunc("/all", Gzip(allHandler))
+	http.HandleFunc("/delete", Gzip(deleteHandler)) // Register the delete handler
 
 	// Create a file system from the embedded files
 	staticFS, err := fs.Sub(staticFiles, "static")

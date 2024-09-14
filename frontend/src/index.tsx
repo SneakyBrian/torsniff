@@ -52,7 +52,18 @@ const App: React.FC = () => {
     }
   };
 
-  // Utility function to format bytes
+  const handleDelete = async (hash: string) => {
+    if (window.confirm("Are you sure you want to delete this torrent?")) {
+      try {
+        const response = await fetch(`/delete?h=${hash}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Failed to delete');
+        // Refresh the results after deletion
+        fetchResults();
+      } catch (err) {
+        setError((err as Error).message);
+      }
+    }
+  };
   const formatBytes = (bytes: number, decimals = 2) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -137,7 +148,10 @@ const App: React.FC = () => {
         {results && results.map((torrent: any) => (
           <li key={torrent.infohashHex} className="list-group-item d-flex justify-content-between align-items-center">
             {torrent.name} - {formatBytes(torrent.length)}
-            <button className="btn btn-link" onClick={() => handleTorrent(torrent.infohashHex)}>Details</button>
+            <div>
+              <button className="btn btn-link" onClick={() => handleTorrent(torrent.infohashHex)}>Details</button>
+              <button className="btn btn-danger" onClick={() => handleDelete(torrent.infohashHex)}>Delete</button>
+            </div>
           </li>
         ))}
       </ul>
