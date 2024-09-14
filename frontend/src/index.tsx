@@ -67,6 +67,7 @@ const App: React.FC = () => {
         // Refresh the results after deletion
         fetchResults();
         setShowDeleteModal(false); // Close the modal
+        setShowModal(false); // Close the details modal
         setTorrentToDelete(null); // Reset the torrent to delete
       } catch (err) {
         setError((err as Error).message);
