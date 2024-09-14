@@ -254,6 +254,12 @@ func main() {
 
 		startIndex()
 
+		// Attempt to set up UPnP port forwarding
+		err := SetupPortForwarding(int(port))
+		if err != nil {
+			log.Printf("Warning: Failed to set up port forwarding: %v", err)
+		}
+
 		p := &torsniff{
 			laddr:      net.JoinHostPort(addr, strconv.Itoa(int(port))),
 			timeout:    timeout,

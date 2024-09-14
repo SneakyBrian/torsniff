@@ -6,6 +6,7 @@ toolchain go1.23.1
 
 require (
 	github.com/blevesearch/bleve/v2 v2.4.2
+	github.com/huin/goupnp v1.3.0
 	github.com/marksamman/bencode v0.0.0-20150821143521-dc84f26e086e
 	github.com/spf13/cobra v1.8.1
 	golang.org/x/time v0.6.0
