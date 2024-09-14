@@ -1,8 +1,9 @@
 package main
 
 import (
-	"encoding/json"
 	"embed"
+	"encoding/json"
+	"fmt"
 	"io/fs"
 	"log"
 	"net/http"
@@ -142,7 +143,7 @@ func torrentHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func startHTTP() {
+func startHTTP(port int) {
 
 	http.HandleFunc("/query", Gzip(searchHandler))
 	http.HandleFunc("/torrent", Gzip(torrentHandler))
@@ -157,5 +158,6 @@ func startHTTP() {
 	// Serve embedded static files
 	http.Handle("/", http.FileServer(http.FS(staticFS)))
 
-	go http.ListenAndServe(":8090", nil)
+	address := fmt.Sprintf(":%d", port) // Use the provided port
+	go http.ListenAndServe(address, nil)
 }

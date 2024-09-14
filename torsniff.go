@@ -234,6 +234,7 @@ func main() {
 	var timeout time.Duration
 	var verbose bool
 	var friends int
+	var httpPort int // New variable for HTTP port
 
 	fmt.Println("starting...")
 
@@ -261,7 +262,7 @@ func main() {
 		}
 		go p.run()
 
-		startHTTP()
+		startHTTP(httpPort) // Pass the HTTP port to startHTTP
 
 		return nil
 	}
@@ -272,6 +273,7 @@ func main() {
 	root.Flags().IntVarP(&peers, "peers", "e", 400, "max peers to connect to download torrents")
 	root.Flags().DurationVarP(&timeout, "timeout", "t", 30*time.Second, "max time allowed for downloading torrents")
 	root.Flags().BoolVarP(&verbose, "verbose", "v", true, "run in verbose mode")
+	root.Flags().IntVarP(&httpPort, "http-port", "H", 8090, "HTTP server port") // New flag for HTTP port
 
 	if err := root.Execute(); err != nil {
 		log.Fatal(fmt.Errorf("could not start: %s", err))
