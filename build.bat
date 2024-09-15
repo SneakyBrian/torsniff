@@ -26,16 +26,16 @@ go mod tidy
 REM Build Go binaries for different architectures and operating systems
 set GOARCH=amd64
 set GOOS=linux
-go build -o releases\torsniff-%VERSION%-linux-amd64.exe
+go build -o releases\torsniff-%VERSION%-linux-amd64
 
 set GOARCH=386
 set GOOS=linux
-go build -o releases\torsniff-%VERSION%-linux-386.exe
+go build -o releases\torsniff-%VERSION%-linux-386
 
 set GOARCH=arm
 set GOARM=7
 set GOOS=linux
-go build -o releases\torsniff-%VERSION%-linux-arm7.exe
+go build -o releases\torsniff-%VERSION%-linux-arm7
 
 set GOARCH=amd64
 set GOOS=windows
@@ -47,4 +47,4 @@ go build -o releases\torsniff-%VERSION%-windows-386.exe
 
 set GOARCH=amd64
 set GOOS=darwin
-go build -o releases\torsniff-%VERSION%-darwin-amd64.exe
+go build -o releases\torsniff-%VERSION%-darwin-amd64
