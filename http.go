@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/blevesearch/bleve/v2"
 )
@@ -158,6 +159,37 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func torrentFileHandler(w http.ResponseWriter, r *http.Request) {
+	hash := r.URL.Query().Get("h")
+	if hash == "" {
+		http.Error(w, "Missing hash parameter", http.StatusBadRequest)
+		return
+	}
+
+	meta, err := index.GetInternal([]byte(hash))
+	if err != nil {
+		http.Error(w, "Torrent not found", http.StatusNotFound)
+		log.Println(err)
+		return
+	}
+
+	// Parse the torrent to get the name
+	torrent, err := parseTorrent(meta, hash)
+	if err != nil {
+		http.Error(w, "Error parsing torrent", http.StatusInternalServerError)
+		log.Println(err)
+		return
+	}
+
+	// Use the torrent name for the filename, replacing any invalid characters
+	filename := fmt.Sprintf("%s.torrent", sanitizeFilename(torrent.Name))
+
+	w.Header().Set("Content-Type", "application/x-bittorrent")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	w.WriteHeader(http.StatusOK)
+	w.Write(meta)
+}
+
 func countHandler(w http.ResponseWriter, r *http.Request) {
 	docCount, err := index.DocCount()
 	if err != nil {
@@ -174,13 +206,24 @@ func countHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func sanitizeFilename(name string) string {
+	// Replace any characters that are not allowed in filenames
+	return strings.Map(func(r rune) rune {
+		if r == '/' || r == '\\' || r == ':' || r == '*' || r == '?' || r == '"' || r == '<' || r == '>' || r == '|' {
+			return '_'
+		}
+		return r
+	}, name)
+}
+
 func startHTTP(port int) {
 
 	http.HandleFunc("/query", Gzip(searchHandler))
 	http.HandleFunc("/torrent", Gzip(torrentHandler))
 	http.HandleFunc("/all", Gzip(allHandler))
-	http.HandleFunc("/delete", Gzip(deleteHandler)) // Register the delete handler
-	http.HandleFunc("/count", Gzip(countHandler))   // Register the count handler
+	http.HandleFunc("/delete", Gzip(deleteHandler))           // Register the delete handler
+	http.HandleFunc("/count", Gzip(countHandler))             // Register the count handler
+	http.HandleFunc("/torrentfile", Gzip(torrentFileHandler)) // Register the new handler
 
 	// Create a file system from the embedded files
 	staticFS, err := fs.Sub(staticFiles, "static")
