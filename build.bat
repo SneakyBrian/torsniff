@@ -25,14 +25,11 @@ go mod tidy
 
 REM Build Go binaries for different architectures and operating systems
 echo Building Go binary for linux-amd64
-echo Building Go binary for windows-amd64
-echo Building Go binary for darwin-amd64
 set GOARCH=amd64
 set GOOS=linux
 go build -o releases\torsniff-%VERSION%-linux-amd64
 
 echo Building Go binary for linux-386
-echo Building Go binary for windows-386
 set GOARCH=386
 set GOOS=linux
 go build -o releases\torsniff-%VERSION%-linux-386
@@ -43,14 +40,17 @@ set GOARM=7
 set GOOS=linux
 go build -o releases\torsniff-%VERSION%-linux-arm7
 
+echo Building Go binary for windows-amd64
 set GOARCH=amd64
 set GOOS=windows
 go build -o releases\torsniff-%VERSION%-windows-amd64.exe
 
+echo Building Go binary for windows-386
 set GOARCH=386
 set GOOS=windows
 go build -o releases\torsniff-%VERSION%-windows-386.exe
 
+echo Building Go binary for darwin-amd64
 set GOARCH=amd64
 set GOOS=darwin
 go build -o releases\torsniff-%VERSION%-darwin-amd64
