@@ -45,6 +45,9 @@ const App: React.FC = () => {
     };
 
     fetchTotalCount();
+  }, []); // Fetch total count only once when the component mounts
+
+  useEffect(() => {
     fetchResults();
   }, [page]); // Fetch results when the page changes
 
