@@ -16,8 +16,8 @@ echo Building version %VERSION%
 
 REM Build the frontend
 cd frontend
-npm install
-npm run build
+call npm install
+call npm run build
 cd ..
 
 REM Ensure Go dependencies are up to date
