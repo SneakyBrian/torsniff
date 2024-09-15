@@ -33,7 +33,7 @@ const TorrentDetailsModal: React.FC<TorrentDetailsModalProps> = ({
               </a>
             </p>
             <p>
-              <a href={`http://localhost:8090/torrentfile?h=${selectedTorrent.infohashHex}`} className="btn btn-primary" download>
+              <a href={`/torrentfile?h=${selectedTorrent.infohashHex}`} className="btn btn-primary" download>
                 📥
               </a>
             </p>
