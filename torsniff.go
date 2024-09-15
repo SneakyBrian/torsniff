@@ -257,6 +257,7 @@ func main() {
 		// Attempt to set up UPnP port forwarding
 		portMappings := []PortMapping{
 			{Port: int(port), Protocol: "UDP"},
+			{Port: httpPort, Protocol: "TCP"}, // Add HTTP port as TCP
 			// Add more port mappings as needed
 		}
 
