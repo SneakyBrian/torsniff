@@ -256,10 +256,10 @@ func main() {
 
 		startIndex()
 
-		// Randomly choose a port if the default port is -1
+		// Create a new random generator
+		rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 		if port == -1 {
-			rand.Seed(time.Now().UnixNano())
-			port = rand.Intn(1000) + 6000 // Random port between 6000 and 6999
+			port = rng.Intn(1000) + 6000 // Random port between 6000 and 6999
 			log.Printf("No DHT port specified, using random port: %d", port)
 		}
 		portMappings := []PortMapping{
