@@ -235,8 +235,9 @@ func main() {
 	var timeout time.Duration
 	var verbose bool
 	var friends int
-	var httpPort int // New variable for HTTP port
+	var httpPort int
 	var maxRetries int
+	var enableHTTPPortMapping bool // New variable for enabling HTTP port mapping
 
 	fmt.Println("starting...")
 
@@ -257,8 +258,11 @@ func main() {
 		// Attempt to set up UPnP port forwarding
 		portMappings := []PortMapping{
 			{Port: int(port), Protocol: "UDP"},
-			{Port: httpPort, Protocol: "TCP"}, // Add HTTP port as TCP
-			// Add more port mappings as needed
+		}
+
+		// Conditionally add HTTP port mapping
+		if enableHTTPPortMapping {
+			portMappings = append(portMappings, PortMapping{Port: httpPort, Protocol: "TCP"})
 		}
 
 		err := SetupPortForwarding(portMappings)
@@ -290,6 +294,8 @@ func main() {
 	root.Flags().BoolVarP(&verbose, "verbose", "v", true, "run in verbose mode")
 	root.Flags().IntVarP(&httpPort, "http-port", "H", 8090, "HTTP server port")
 	root.Flags().IntVarP(&maxRetries, "max-retries", "r", 3, "maximum number of retries to fetch metadata") // New flag for max retries
+
+	root.Flags().BoolVarP(&enableHTTPPortMapping, "enable-http-port-mapping", "m", false, "enable HTTP port mapping for UPnP") // New flag with short option
 
 	if err := root.Execute(); err != nil {
 		log.Fatal(fmt.Errorf("could not start: %s", err))
