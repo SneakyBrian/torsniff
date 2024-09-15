@@ -230,7 +230,7 @@ func main() {
 	// log.SetFlags(0)
 
 	var addr string
-	var port uint16
+	var port int // Change to int to allow -1 as a default value
 	var peers int
 	var timeout time.Duration
 	var verbose bool
@@ -255,7 +255,12 @@ func main() {
 
 		startIndex()
 
-		// Attempt to set up UPnP port forwarding
+		// Randomly choose a port if the default port is -1
+		if port == -1 {
+			rand.Seed(time.Now().UnixNano())
+			port = rand.Intn(1000) + 6000 // Random port between 6000 and 6999
+			log.Printf("No DHT port specified, using random port: %d", port)
+		}
 		portMappings := []PortMapping{
 			{Port: int(port), Protocol: "UDP"},
 		}
@@ -287,7 +292,7 @@ func main() {
 	}
 
 	root.Flags().StringVarP(&addr, "addr", "a", "", "listen on given address (default all, ipv4 and ipv6)")
-	root.Flags().Uint16VarP(&port, "port", "p", 6881, "listen on given port")
+	root.Flags().IntVarP(&port, "port", "p", -1, "listen on given port") // Default to -1
 	root.Flags().IntVarP(&friends, "friends", "f", 500, "max fiends to make with per second")
 	root.Flags().IntVarP(&peers, "peers", "e", 400, "max peers to connect to download torrents")
 	root.Flags().DurationVarP(&timeout, "timeout", "t", 30*time.Second, "max time allowed for downloading torrents")
