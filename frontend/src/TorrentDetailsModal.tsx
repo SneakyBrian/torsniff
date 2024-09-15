@@ -32,6 +32,11 @@ const TorrentDetailsModal: React.FC<TorrentDetailsModalProps> = ({
                 {"🧲"}
               </a>
             </p>
+            <p>
+              <a href={`http://localhost:8090/torrentfile?h=${selectedTorrent.infohashHex}`} className="btn btn-primary" download>
+                📥
+              </a>
+            </p>
             <h3>Files:</h3>
             <div className="files-section">
               <Suspense fallback={<div>Loading files...</div>}>
