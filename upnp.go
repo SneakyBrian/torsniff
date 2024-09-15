@@ -36,23 +36,25 @@ func SetupPortForwarding(port int) error {
 			continue
 		}
 
-		client := clients[0]
-		externalIP, err := client.GetExternalIPAddress()
-		if err != nil {
-			log.Printf("error getting external IP for device %s: %v", device.Location, err)
-			continue
+		// Iterate over all clients for each device
+		for _, client := range clients {
+			externalIP, err := client.GetExternalIPAddress()
+			if err != nil {
+				log.Printf("error getting external IP for device %s: %v", device.Location, err)
+				continue
+			}
+
+			log.Printf("External IP address for device %s: %s", device.Location, externalIP)
+
+			// Add port mapping for each client
+			err = client.AddPortMapping("", uint16(port), "UDP", uint16(port), localIP, true, "Torrent Indexer", 0)
+			if err != nil {
+				log.Printf("error adding port mapping for device %s: %v", device.Location, err)
+				continue
+			}
+
+			log.Printf("Port %d forwarded to local IP %s on device %s", port, localIP, device.Location)
 		}
-
-		log.Printf("External IP address for device %s: %s", device.Location, externalIP)
-
-		// Add port mapping for each device
-		err = client.AddPortMapping("", uint16(port), "UDP", uint16(port), localIP, true, "Torrent Indexer", 0)
-		if err != nil {
-			log.Printf("error adding port mapping for device %s: %v", device.Location, err)
-			continue
-		}
-
-		log.Printf("Port %d forwarded to local IP %s on device %s", port, localIP, device.Location)
 	}
 	return nil
 }
