@@ -21,34 +21,39 @@ func SetupPortForwarding(port int) error {
 		return fmt.Errorf("no UPnP devices found")
 	}
 
-	// Use the first available device
-	device := devices[0]
-
-	// Create a WANIPConnection1 client
-	clients, err := internetgateway1.NewWANIPConnection1ClientsFromRootDevice(device.Root, nil)
-	if err != nil || len(clients) == 0 {
-		return fmt.Errorf("error creating WANIPConnection1 client: %v", err)
-	}
-	client := clients[0]
-	externalIP, err := client.GetExternalIPAddress()
-	if err != nil {
-		return fmt.Errorf("error getting external IP: %v", err)
-	}
-
-	log.Printf("External IP address: %s", externalIP)
-
-	// Add port mapping
+	// Retrieve the local IP address
 	localIP, err := getLocalIP()
 	if err != nil {
 		return fmt.Errorf("error getting local IP: %v", err)
 	}
 
-	err = client.AddPortMapping("", uint16(port), "UDP", uint16(port), localIP, true, "Torrent Indexer", 0)
-	if err != nil {
-		return fmt.Errorf("error adding port mapping: %v", err)
-	}
+	// Iterate over all discovered devices
+	for _, device := range devices {
+		// Create a WANIPConnection1 client for each device
+		clients, err := internetgateway1.NewWANIPConnection1ClientsFromRootDevice(device.Root, nil)
+		if err != nil || len(clients) == 0 {
+			log.Printf("error creating WANIPConnection1 client for device %s: %v", device.Location, err)
+			continue
+		}
 
-	log.Printf("Port %d forwarded to local IP %s", port, localIP)
+		client := clients[0]
+		externalIP, err := client.GetExternalIPAddress()
+		if err != nil {
+			log.Printf("error getting external IP for device %s: %v", device.Location, err)
+			continue
+		}
+
+		log.Printf("External IP address for device %s: %s", device.Location, externalIP)
+
+		// Add port mapping for each device
+		err = client.AddPortMapping("", uint16(port), "UDP", uint16(port), localIP, true, "Torrent Indexer", 0)
+		if err != nil {
+			log.Printf("error adding port mapping for device %s: %v", device.Location, err)
+			continue
+		}
+
+		log.Printf("Port %d forwarded to local IP %s on device %s", port, localIP, device.Location)
+	}
 	return nil
 }
 
