@@ -27,7 +27,7 @@ set REMOTE_HOST=%3
 set REMOTE_PATH=%4
 
 REM Define the binary path
-set BINARY_PATH=releases\torsniff-%VERSION%-linux-arm7
+set BINARY_PATH=releases\torsniff-%VERSION%-linux-arm64
 
 REM Check if pscp is available
 where pscp >nul 2>nul

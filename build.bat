@@ -40,6 +40,11 @@ set GOARM=7
 set GOOS=linux
 go build -o releases\torsniff-%VERSION%-linux-arm7
 
+echo Building Go binary for linux-arm64
+set GOARCH=arm64
+set GOOS=linux
+go build -o releases\torsniff-%VERSION%-linux-arm64
+
 echo Building Go binary for windows-amd64
 set GOARCH=amd64
 set GOOS=windows
