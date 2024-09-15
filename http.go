@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/blevesearch/bleve/v2"
+	"github.com/marksamman/bencode"
 )
 
 //go:embed static/*
@@ -181,13 +183,26 @@ func torrentFileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// decode data
+	d, err := bencode.Decode(bytes.NewBuffer(meta))
+	if err != nil {
+		http.Error(w, "Torrent not decoded", http.StatusInternalServerError)
+		log.Println(err)
+		return
+	}
+
+	// re-encode with correct format
+	ed := bencode.Encode(map[string]interface{}{
+		"info": d,
+	})
+
 	// Use the torrent name for the filename, replacing any invalid characters
 	filename := fmt.Sprintf("%s.torrent", sanitizeFilename(torrent.Name))
 
 	w.Header().Set("Content-Type", "application/x-bittorrent")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
 	w.WriteHeader(http.StatusOK)
-	w.Write(meta)
+	w.Write(ed)
 }
 
 func countHandler(w http.ResponseWriter, r *http.Request) {

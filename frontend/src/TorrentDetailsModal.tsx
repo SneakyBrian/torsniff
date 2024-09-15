@@ -27,12 +27,10 @@ const TorrentDetailsModal: React.FC<TorrentDetailsModalProps> = ({
             <p>Name: {selectedTorrent.name}</p>
             <p>Size: {formatBytes(selectedTorrent.length)}</p>
             <p>
-              Link: 
-              <a href={`magnet:?xt=urn:btih:${selectedTorrent.infohashHex}`} target="_blank" rel="noopener noreferrer">
+              Links: 
+              <a href={`magnet:?xt=urn:btih:${selectedTorrent.infohashHex}`} className="btn btn-primary" target="_blank" rel="noopener noreferrer">
                 {"🧲"}
               </a>
-            </p>
-            <p>
               <a href={`/torrentfile?h=${selectedTorrent.infohashHex}`} className="btn btn-primary" download>
                 📥
               </a>
