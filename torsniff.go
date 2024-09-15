@@ -255,7 +255,12 @@ func main() {
 		startIndex()
 
 		// Attempt to set up UPnP port forwarding
-		err := SetupPortForwarding(int(port))
+		portMappings := []PortMapping{
+			{Port: int(port), Protocol: "UDP"},
+			// Add more port mappings as needed
+		}
+
+		err := SetupPortForwarding(portMappings)
 		if err != nil {
 			log.Printf("Warning: Failed to set up port forwarding: %v", err)
 		}

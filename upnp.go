@@ -9,8 +9,13 @@ import (
 	"github.com/huin/goupnp/dcps/internetgateway1"
 )
 
-// SetupPortForwarding attempts to set up a UPnP port forwarding rule for the specified port.
-func SetupPortForwarding(port int) error {
+type PortMapping struct {
+	Port     int
+	Protocol string // "TCP" or "UDP"
+}
+
+// SetupPortForwarding attempts to set up UPnP port forwarding rules for the specified ports and protocols.
+func SetupPortForwarding(portMappings []PortMapping) error {
 	// Discover UPnP devices
 	devices, err := goupnp.DiscoverDevices(internetgateway1.URN_WANIPConnection_1)
 	if err != nil {
