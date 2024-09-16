@@ -328,13 +328,20 @@ func main() {
 	fmt.Println("exiting...")
 }
 func serializeFiles(files []*tfile) string {
-	// Convert files to a JSON string or any other format you prefer
-	// This is a placeholder function
-	return ""
+	data, err := json.Marshal(files)
+	if err != nil {
+		log.Printf("Error serializing files: %v", err)
+		return ""
+	}
+	return string(data)
 }
 
 func deserializeFiles(files string) []*tfile {
-	// Convert the serialized files back to []*tfile
-	// This is a placeholder function
-	return nil
+	var tfiles []*tfile
+	err := json.Unmarshal([]byte(files), &tfiles)
+	if err != nil {
+		log.Printf("Error deserializing files: %v", err)
+		return nil
+	}
+	return tfiles
 }
