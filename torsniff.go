@@ -214,10 +214,13 @@ func (t *torsniff) work(ac *announcement, tokens chan struct{}) {
 
 	log.Printf("Indexing torrent: %s", torrent.InfohashHex)
 
-	index.SetInternal([]byte(ac.infohashHex), meta)
-
-	// index the torrent
-	index.Index(torrent.InfohashHex, torrent)
+	// Insert into SQLite
+	_, err = db.Exec(`INSERT INTO torrents (infohashHex, name, length, files) VALUES (?, ?, ?, ?)`,
+		torrent.InfohashHex, torrent.Name, torrent.Length, serializeFiles(torrent.Files))
+	if err != nil {
+		log.Printf("error inserting torrent into database: %v", err)
+		return
+	}
 
 	log.Println(torrent)
 }
@@ -315,7 +318,18 @@ func main() {
 	sig := <-sigs
 	log.Printf("we get signal! %s", sig)
 
-	log.Println("closing index...")
-	index.Close()
+	log.Println("closing database...")
+	db.Close()
 	fmt.Println("exiting...")
+}
+func serializeFiles(files []*tfile) string {
+	// Convert files to a JSON string or any other format you prefer
+	// This is a placeholder function
+	return ""
+}
+
+func deserializeFiles(files string) []*tfile {
+	// Convert the serialized files back to []*tfile
+	// This is a placeholder function
+	return nil
 }

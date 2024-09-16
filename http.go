@@ -96,22 +96,28 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	searchText := r.URL.Query().Get("q")
 
 	// search for some text
-	query := bleve.NewQueryStringQuery(searchText)
-	searchRequest := bleve.NewSearchRequest(query)
-
-	searchRequest.From = getQSInt(r.URL.Query(), "f", searchRequest.From)
-	searchRequest.Size = getQSInt(r.URL.Query(), "s", searchRequest.Size)
-
-	searchResults, err := index.Search(searchRequest)
+	rows, err := db.Query(`SELECT infohashHex, name, length, files FROM torrents WHERE name LIKE ?`, "%"+searchText+"%")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println(err)
 		return
 	}
+	defer rows.Close()
+
+	var torrents []*torrent
+	for rows.Next() {
+		var t torrent
+		var files string
+		if err := rows.Scan(&t.InfohashHex, &t.Name, &t.Length, &files); err != nil {
+			log.Println(err)
+			continue
+		}
+		t.Files = deserializeFiles(files)
+		torrents = append(torrents, &t)
+	}
 
 	response := searchResponse{
-		SearchResults: searchResults,
-		Torrents:      getTorrentsFromSearch(searchResults),
+		Torrents: torrents,
 	}
 
 	err = json.NewEncoder(w).Encode(response)
