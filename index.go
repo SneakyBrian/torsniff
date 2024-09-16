@@ -5,10 +5,6 @@ import (
 	"log"
 
 	_ "github.com/glebarez/go-sqlite"
-
-	"github.com/blevesearch/bleve/v2"
-	"github.com/blevesearch/bleve/v2/analysis/analyzer/keyword"
-	"github.com/blevesearch/bleve/v2/analysis/analyzer/simple"
 )
 
 var (
