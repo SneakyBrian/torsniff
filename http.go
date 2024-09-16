@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/blevesearch/bleve/v2"
 	"github.com/marksamman/bencode"
 )
 
@@ -20,32 +19,7 @@ import (
 var staticFiles embed.FS
 
 type searchResponse struct {
-	SearchResults *bleve.SearchResult `json:"search"`
-	Torrents      []*torrent          `json:"torrents"`
-}
-
-func getTorrentsFromSearch(searchResults *bleve.SearchResult) []*torrent {
-
-	var torrents []*torrent
-
-	for _, hit := range searchResults.Hits {
-
-		meta, err := index.GetInternal([]byte(hit.ID))
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-
-		torrent, err := parseTorrent(meta, hit.ID)
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-
-		torrents = append(torrents, torrent)
-	}
-
-	return torrents
+	Torrents []*torrent `json:"torrents"`
 }
 
 func getQSInt(qs url.Values, key string, defaultValue int) int {
@@ -66,22 +40,29 @@ func getQSInt(qs url.Values, key string, defaultValue int) int {
 
 func allHandler(w http.ResponseWriter, r *http.Request) {
 
-	query := bleve.NewMatchAllQuery()
-	searchRequest := bleve.NewSearchRequest(query)
-
-	searchRequest.From = getQSInt(r.URL.Query(), "f", searchRequest.From)
-	searchRequest.Size = getQSInt(r.URL.Query(), "s", searchRequest.Size)
-
-	searchResults, err := index.Search(searchRequest)
+	// Implement logic to fetch all torrents from the SQLite database
+	rows, err := db.Query(`SELECT infohashHex, name, length, files FROM torrents`)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println(err)
 		return
 	}
+	defer rows.Close()
+
+	var torrents []*torrent
+	for rows.Next() {
+		var t torrent
+		var files string
+		if err := rows.Scan(&t.InfohashHex, &t.Name, &t.Length, &files); err != nil {
+			log.Println(err)
+			continue
+		}
+		t.Files = deserializeFiles(files)
+		torrents = append(torrents, &t)
+	}
 
 	response := searchResponse{
-		SearchResults: searchResults,
-		Torrents:      getTorrentsFromSearch(searchResults),
+		Torrents: torrents,
 	}
 
 	err = json.NewEncoder(w).Encode(response)
@@ -131,18 +112,35 @@ func torrentHandler(w http.ResponseWriter, r *http.Request) {
 
 	hashes := r.URL.Query()["h"]
 
-	query := bleve.NewDocIDQuery(hashes)
-	search := bleve.NewSearchRequest(query)
-	searchResults, err := index.Search(search)
+	// Implement logic to fetch torrents by hashes from the SQLite database
+	query := `SELECT infohashHex, name, length, files FROM torrents WHERE infohashHex IN (?` + strings.Repeat(",?", len(hashes)-1) + `)`
+	args := make([]interface{}, len(hashes))
+	for i, hash := range hashes {
+		args[i] = hash
+	}
+
+	rows, err := db.Query(query, args...)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println(err)
 		return
 	}
+	defer rows.Close()
+
+	var torrents []*torrent
+	for rows.Next() {
+		var t torrent
+		var files string
+		if err := rows.Scan(&t.InfohashHex, &t.Name, &t.Length, &files); err != nil {
+			log.Println(err)
+			continue
+		}
+		t.Files = deserializeFiles(files)
+		torrents = append(torrents, &t)
+	}
 
 	response := searchResponse{
-		SearchResults: searchResults,
-		Torrents:      getTorrentsFromSearch(searchResults),
+		Torrents: torrents,
 	}
 
 	err = json.NewEncoder(w).Encode(response)
@@ -212,14 +210,16 @@ func torrentFileHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func countHandler(w http.ResponseWriter, r *http.Request) {
-	docCount, err := index.DocCount()
+	// Implement logic to count torrents in the SQLite database
+	var count int
+	err := db.QueryRow(`SELECT COUNT(*) FROM torrents`).Scan(&count)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println(err)
 		return
 	}
 
-	response := map[string]uint64{"totalCount": docCount}
+	response := map[string]int{"totalCount": count}
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -226,8 +226,13 @@ func (t *torsniff) work(ac *announcement, tokens chan struct{}) {
 }
 
 func (t *torsniff) isTorrentExist(infohashHex string) bool {
-	data, err := index.GetInternal([]byte(infohashHex))
-	return err == nil && len(data) > 0
+	var exists bool
+	err := db.QueryRow(`SELECT EXISTS(SELECT 1 FROM torrents WHERE infohashHex = ?)`, infohashHex).Scan(&exists)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+	return exists
 }
 
 func main() {
