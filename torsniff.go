@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -224,16 +223,6 @@ func (t *torsniff) work(ac *announcement, tokens chan struct{}) {
 	log.Println(torrent)
 }
 
-func (t *torsniff) isTorrentExist(infohashHex string) bool {
-	var exists bool
-	err := db.QueryRow(`SELECT EXISTS(SELECT 1 FROM torrents WHERE infohashHex = ?)`, infohashHex).Scan(&exists)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	return exists
-}
-
 func main() {
 	// log.SetFlags(0)
 
@@ -325,22 +314,4 @@ func main() {
 	log.Println("closing database...")
 	db.Close()
 	fmt.Println("exiting...")
-}
-func serializeFiles(files []*tfile) string {
-	data, err := json.Marshal(files)
-	if err != nil {
-		log.Printf("Error serializing files: %v", err)
-		return ""
-	}
-	return string(data)
-}
-
-func deserializeFiles(files string) []*tfile {
-	var tfiles []*tfile
-	err := json.Unmarshal([]byte(files), &tfiles)
-	if err != nil {
-		log.Printf("Error deserializing files: %v", err)
-		return nil
-	}
-	return tfiles
 }

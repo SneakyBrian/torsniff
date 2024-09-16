@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"log"
 	"strings"
 
@@ -143,4 +144,23 @@ func isTorrentExist(infohashHex string) bool {
 		return false
 	}
 	return exists
+}
+
+func serializeFiles(files []*tfile) string {
+	data, err := json.Marshal(files)
+	if err != nil {
+		log.Printf("Error serializing files: %v", err)
+		return ""
+	}
+	return string(data)
+}
+
+func deserializeFiles(files string) []*tfile {
+	var tfiles []*tfile
+	err := json.Unmarshal([]byte(files), &tfiles)
+	if err != nil {
+		log.Printf("Error deserializing files: %v", err)
+		return nil
+	}
+	return tfiles
 }
