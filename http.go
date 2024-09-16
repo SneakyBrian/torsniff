@@ -153,13 +153,17 @@ func torrentHandler(w http.ResponseWriter, r *http.Request) {
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
 	hashes := r.URL.Query()["h"]
 
-	for _, hash := range hashes {
-		err := index.Delete(hash)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			log.Println(err)
-			return
-		}
+	query := `DELETE FROM torrents WHERE infohashHex IN (?` + strings.Repeat(",?", len(hashes)-1) + `)`
+	args := make([]interface{}, len(hashes))
+	for i, hash := range hashes {
+		args[i] = hash
+	}
+
+	_, err := db.Exec(query, args...)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -172,25 +176,22 @@ func torrentFileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	meta, err := index.GetInternal([]byte(hash))
+	var meta []byte
+	err := db.QueryRow(`SELECT files FROM torrents WHERE infohashHex = ?`, hash).Scan(&meta)
 	if err != nil {
-		http.Error(w, "Torrent not found", http.StatusNotFound)
+		if err == sql.ErrNoRows {
+			http.Error(w, "Torrent not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		log.Println(err)
 		return
 	}
 
-	// Parse the torrent to get the name
-	torrent, err := parseTorrent(meta, hash)
-	if err != nil {
-		http.Error(w, "Error parsing torrent", http.StatusInternalServerError)
-		log.Println(err)
-		return
-	}
-
-	// decode data
+	// Decode the files field
 	d, err := bencode.Decode(bytes.NewBuffer(meta))
 	if err != nil {
-		http.Error(w, "Torrent not decoded", http.StatusInternalServerError)
+		http.Error(w, "Error decoding torrent", http.StatusInternalServerError)
 		log.Println(err)
 		return
 	}
