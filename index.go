@@ -25,7 +25,8 @@ func startIndex() {
 		infohashHex TEXT PRIMARY KEY,
 		name TEXT,
 		length INTEGER,
-		files TEXT
+		files TEXT,
+		meta BLOB
 	)`)
 	if err != nil {
 		log.Fatal(err)

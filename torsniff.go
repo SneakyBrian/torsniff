@@ -216,8 +216,8 @@ func (t *torsniff) work(ac *announcement, tokens chan struct{}) {
 	log.Printf("Indexing torrent: %s", torrent.InfohashHex)
 
 	// Insert into SQLite
-	_, err = db.Exec(`INSERT INTO torrents (infohashHex, name, length, files) VALUES (?, ?, ?, ?)`,
-		torrent.InfohashHex, torrent.Name, torrent.Length, serializeFiles(torrent.Files))
+	_, err = db.Exec(`INSERT INTO torrents (infohashHex, name, length, files, meta) VALUES (?, ?, ?, ?, ?)`,
+		torrent.InfohashHex, torrent.Name, torrent.Length, serializeFiles(torrent.Files), meta)
 	if err != nil {
 		log.Printf("error inserting torrent into database: %v", err)
 		return

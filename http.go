@@ -178,7 +178,7 @@ func torrentFileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var meta []byte
-	err := db.QueryRow(`SELECT files FROM torrents WHERE infohashHex = ?`, hash).Scan(&meta)
+	err := db.QueryRow(`SELECT meta FROM torrents WHERE infohashHex = ?`, hash).Scan(&meta)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "Torrent not found", http.StatusNotFound)
