@@ -170,7 +170,7 @@ func (t *torsniff) work(ac *announcement, tokens chan struct{}) {
 		<-tokens
 	}()
 
-	if t.isTorrentExist(ac.infohashHex) {
+	if isTorrentExist(ac.infohashHex) {
 		log.Printf("infohash %s already exists", ac.infohashHex)
 		return
 	}
@@ -215,9 +215,7 @@ func (t *torsniff) work(ac *announcement, tokens chan struct{}) {
 
 	log.Printf("Indexing torrent: %s", torrent.InfohashHex)
 
-	// Insert into SQLite
-	_, err = db.Exec(`INSERT INTO torrents (infohashHex, name, length, files, meta) VALUES (?, ?, ?, ?, ?)`,
-		torrent.InfohashHex, torrent.Name, torrent.Length, serializeFiles(torrent.Files), meta)
+	err = insertTorrent(torrent, meta)
 	if err != nil {
 		log.Printf("error inserting torrent into database: %v", err)
 		return

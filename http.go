@@ -41,31 +41,14 @@ func getQSInt(qs url.Values, key string, defaultValue int) int {
 
 func allHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Implement logic to fetch all torrents from the SQLite database
-	rows, err := db.Query(`SELECT infohashHex, name, length, files FROM torrents`)
+	torrents, err := getAllTorrents()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println(err)
 		return
 	}
-	defer rows.Close()
 
-	var torrents []*torrent
-	for rows.Next() {
-		var t torrent
-		var files string
-		if err := rows.Scan(&t.InfohashHex, &t.Name, &t.Length, &files); err != nil {
-			log.Println(err)
-			continue
-		}
-		t.Files = deserializeFiles(files)
-		torrents = append(torrents, &t)
-	}
-
-	response := searchResponse{
-		Torrents: torrents,
-	}
-
+	response := searchResponse{Torrents: torrents}
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -77,31 +60,14 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 
 	searchText := r.URL.Query().Get("q")
 
-	// search for some text
-	rows, err := db.Query(`SELECT infohashHex, name, length, files FROM torrents WHERE name LIKE ?`, "%"+searchText+"%")
+	torrents, err := searchTorrents(searchText)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println(err)
 		return
 	}
-	defer rows.Close()
 
-	var torrents []*torrent
-	for rows.Next() {
-		var t torrent
-		var files string
-		if err := rows.Scan(&t.InfohashHex, &t.Name, &t.Length, &files); err != nil {
-			log.Println(err)
-			continue
-		}
-		t.Files = deserializeFiles(files)
-		torrents = append(torrents, &t)
-	}
-
-	response := searchResponse{
-		Torrents: torrents,
-	}
-
+	response := searchResponse{Torrents: torrents}
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -113,37 +79,14 @@ func torrentHandler(w http.ResponseWriter, r *http.Request) {
 
 	hashes := r.URL.Query()["h"]
 
-	// Implement logic to fetch torrents by hashes from the SQLite database
-	query := `SELECT infohashHex, name, length, files FROM torrents WHERE infohashHex IN (?` + strings.Repeat(",?", len(hashes)-1) + `)`
-	args := make([]interface{}, len(hashes))
-	for i, hash := range hashes {
-		args[i] = hash
-	}
-
-	rows, err := db.Query(query, args...)
+	torrents, err := getTorrentsByHashes(hashes)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println(err)
 		return
 	}
-	defer rows.Close()
 
-	var torrents []*torrent
-	for rows.Next() {
-		var t torrent
-		var files string
-		if err := rows.Scan(&t.InfohashHex, &t.Name, &t.Length, &files); err != nil {
-			log.Println(err)
-			continue
-		}
-		t.Files = deserializeFiles(files)
-		torrents = append(torrents, &t)
-	}
-
-	response := searchResponse{
-		Torrents: torrents,
-	}
-
+	response := searchResponse{Torrents: torrents}
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -154,13 +97,7 @@ func torrentHandler(w http.ResponseWriter, r *http.Request) {
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
 	hashes := r.URL.Query()["h"]
 
-	query := `DELETE FROM torrents WHERE infohashHex IN (?` + strings.Repeat(",?", len(hashes)-1) + `)`
-	args := make([]interface{}, len(hashes))
-	for i, hash := range hashes {
-		args[i] = hash
-	}
-
-	_, err := db.Exec(query, args...)
+	err := deleteTorrents(hashes)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println(err)
@@ -177,8 +114,7 @@ func torrentFileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var meta []byte
-	err := db.QueryRow(`SELECT meta FROM torrents WHERE infohashHex = ?`, hash).Scan(&meta)
+	meta, err := getTorrentMeta(hash)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "Torrent not found", http.StatusNotFound)
@@ -220,9 +156,7 @@ func torrentFileHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func countHandler(w http.ResponseWriter, r *http.Request) {
-	// Implement logic to count torrents in the SQLite database
-	var count int
-	err := db.QueryRow(`SELECT COUNT(*) FROM torrents`).Scan(&count)
+	count, err := countTorrents()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println(err)
