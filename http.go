@@ -41,7 +41,10 @@ func getQSInt(qs url.Values, key string, defaultValue int) int {
 
 func allHandler(w http.ResponseWriter, r *http.Request) {
 
-	torrents, err := getAllTorrents()
+	from := getQSInt(r.URL.Query(), "f", 0)
+	size := getQSInt(r.URL.Query(), "s", 10)
+
+	torrents, err := getAllTorrents(from, size)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println(err)
@@ -60,7 +63,10 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 
 	searchText := r.URL.Query().Get("q")
 
-	torrents, err := searchTorrents(searchText)
+	from := getQSInt(r.URL.Query(), "f", 0)
+	size := getQSInt(r.URL.Query(), "s", 10)
+
+	torrents, err := searchTorrents(searchText, from, size)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println(err)

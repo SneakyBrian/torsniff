@@ -41,8 +41,9 @@ func insertTorrent(t *torrent, meta []byte) error {
 	return err
 }
 
-func getAllTorrents() ([]*torrent, error) {
-	rows, err := db.Query(`SELECT infohashHex, name, length, files FROM torrents`)
+func getAllTorrents(from, size int) ([]*torrent, error) {
+	query := `SELECT infohashHex, name, length, files FROM torrents LIMIT ? OFFSET ?`
+	rows, err := db.Query(query, size, from)
 	if err != nil {
 		return nil, err
 	}
@@ -62,8 +63,9 @@ func getAllTorrents() ([]*torrent, error) {
 	return torrents, nil
 }
 
-func searchTorrents(searchText string) ([]*torrent, error) {
-	rows, err := db.Query(`SELECT infohashHex, name, length, files FROM torrents WHERE name LIKE ?`, "%"+searchText+"%")
+func searchTorrents(searchText string, from, size int) ([]*torrent, error) {
+	query := `SELECT infohashHex, name, length, files FROM torrents WHERE name LIKE ? LIMIT ? OFFSET ?`
+	rows, err := db.Query(query, "%"+searchText+"%", size, from)
 	if err != nil {
 		return nil, err
 	}
