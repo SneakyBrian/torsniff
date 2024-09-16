@@ -189,6 +189,14 @@ func torrentFileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Parse the torrent to get the name
+	torrent, err := parseTorrent(meta, hash)
+	if err != nil {
+		http.Error(w, "Error parsing torrent", http.StatusInternalServerError)
+		log.Println(err)
+		return
+	}
+
 	// Decode the files field
 	d, err := bencode.Decode(bytes.NewBuffer(meta))
 	if err != nil {
