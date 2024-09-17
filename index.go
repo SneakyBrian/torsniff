@@ -27,7 +27,8 @@ func startIndex() {
 		name TEXT,
 		length INTEGER,
 		files TEXT,
-		meta BLOB
+		meta BLOB,
+		added DATETIME DEFAULT CURRENT_TIMESTAMP
 	)`)
 	if err != nil {
 		log.Fatal(err)
@@ -43,7 +44,7 @@ func insertTorrent(t *torrent, meta []byte) error {
 }
 
 func getAllTorrents(from, size int) ([]*torrent, error) {
-	query := `SELECT infohashHex, name, length, files FROM torrents LIMIT ? OFFSET ?`
+	query := `SELECT infohashHex, name, length, files, added FROM torrents LIMIT ? OFFSET ?`
 	rows, err := db.Query(query, size, from)
 	if err != nil {
 		return nil, err
@@ -54,7 +55,8 @@ func getAllTorrents(from, size int) ([]*torrent, error) {
 	for rows.Next() {
 		var t torrent
 		var files string
-		if err := rows.Scan(&t.InfohashHex, &t.Name, &t.Length, &files); err != nil {
+		var added string
+		if err := rows.Scan(&t.InfohashHex, &t.Name, &t.Length, &files, &added); err != nil {
 			log.Println(err)
 			continue
 		}
@@ -65,7 +67,7 @@ func getAllTorrents(from, size int) ([]*torrent, error) {
 }
 
 func searchTorrents(searchText string, from, size int) ([]*torrent, error) {
-	query := `SELECT infohashHex, name, length, files FROM torrents WHERE name LIKE ? LIMIT ? OFFSET ?`
+	query := `SELECT infohashHex, name, length, files, added FROM torrents WHERE name LIKE ? LIMIT ? OFFSET ?`
 	rows, err := db.Query(query, "%"+searchText+"%", size, from)
 	if err != nil {
 		return nil, err
@@ -76,7 +78,8 @@ func searchTorrents(searchText string, from, size int) ([]*torrent, error) {
 	for rows.Next() {
 		var t torrent
 		var files string
-		if err := rows.Scan(&t.InfohashHex, &t.Name, &t.Length, &files); err != nil {
+		var added string
+		if err := rows.Scan(&t.InfohashHex, &t.Name, &t.Length, &files, &added); err != nil {
 			log.Println(err)
 			continue
 		}
@@ -87,7 +90,7 @@ func searchTorrents(searchText string, from, size int) ([]*torrent, error) {
 }
 
 func getTorrentsByHashes(hashes []string) ([]*torrent, error) {
-	query := `SELECT infohashHex, name, length, files FROM torrents WHERE infohashHex IN (?` + strings.Repeat(",?", len(hashes)-1) + `)`
+	query := `SELECT infohashHex, name, length, files, added FROM torrents WHERE infohashHex IN (?` + strings.Repeat(",?", len(hashes)-1) + `)`
 	args := make([]interface{}, len(hashes))
 	for i, hash := range hashes {
 		args[i] = hash
@@ -103,7 +106,8 @@ func getTorrentsByHashes(hashes []string) ([]*torrent, error) {
 	for rows.Next() {
 		var t torrent
 		var files string
-		if err := rows.Scan(&t.InfohashHex, &t.Name, &t.Length, &files); err != nil {
+		var added string
+		if err := rows.Scan(&t.InfohashHex, &t.Name, &t.Length, &files, &added); err != nil {
 			log.Println(err)
 			continue
 		}
