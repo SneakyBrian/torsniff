@@ -358,3 +358,22 @@ func startTrackerDownloadScheduler() {
 	db.Close()
 	fmt.Println("exiting...")
 }
+
+func main() {
+	// Initialize and run the application
+	if err := root.Execute(); err != nil {
+		log.Fatal(fmt.Errorf("could not start: %s", err))
+	}
+
+	// wait for signal to shut down
+	sigs := make(chan os.Signal, 1)
+
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	sig := <-sigs
+	log.Printf("we get signal! %s", sig)
+
+	log.Println("closing database...")
+	db.Close()
+	fmt.Println("exiting...")
+}
