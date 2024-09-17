@@ -121,12 +121,14 @@ const App: React.FC = () => {
       {error && <p className="text-danger">{error}</p>}
       <ul className="list-group mb-3">
         {results && results.map((torrent: any) => (
-          <li key={torrent.infohashHex} className="list-group-item d-flex justify-content-between align-items-center">
-            {torrent.name} - {formatBytes(torrent.length)}
-            <div>
-              <button className="btn btn-link" onClick={() => handleTorrent(torrent.infohashHex)}>Details</button>
-            </div>
-          </li>
+          torrent && (
+            <li key={torrent.infohashHex} className="list-group-item d-flex justify-content-between align-items-center">
+              {torrent.name} - {formatBytes(torrent.length)}
+              <div>
+                <button className="btn btn-link" onClick={() => handleTorrent(torrent.infohashHex)}>Details</button>
+              </div>
+            </li>
+          )
         ))}
       </ul>
       <div className="d-flex justify-content-between">
