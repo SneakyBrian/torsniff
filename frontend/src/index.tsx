@@ -41,18 +41,6 @@ const App: React.FC = () => {
       setTotalCount(data.totalCount);
     };
 
-    const fetchTotalCount = async () => {
-      try {
-        const response = await fetch('/count');
-        if (!response.ok) throw new Error('Failed to fetch total count');
-        const data = await response.json();
-        setTotalCount(data.totalCount);
-      } catch (err) {
-        setError((err as Error).message);
-      }
-    };
-
-    fetchTotalCount();
     const fetchTrackers = async () => {
       try {
         const response = await fetch('/trackers');
