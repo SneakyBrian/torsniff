@@ -8,15 +8,13 @@ import (
 	"math"
 	"math/rand"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
 	"strings"
 	"syscall"
-	"strings"
 	"time"
-	"io"
-	"net/http"
 
 	"github.com/marksamman/bencode"
 	"github.com/spf13/cobra"
@@ -265,6 +263,8 @@ func startTrackerDownloadScheduler() {
 		}
 	}()
 }
+
+func main() {
 	// log.SetFlags(0)
 
 	var addr string
@@ -357,3 +357,4 @@ func startTrackerDownloadScheduler() {
 	log.Println("closing database...")
 	db.Close()
 	fmt.Println("exiting...")
+}
