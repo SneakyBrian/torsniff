@@ -224,7 +224,10 @@ func (t *torsniff) work(ac *announcement, tokens chan struct{}) {
 	log.Println(torrent)
 }
 
-var trackersList []string
+var (
+    trackersList []string
+    trackersMutex sync.RWMutex
+)
 
 const trackerURL = "https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_best.txt"
 
@@ -244,8 +247,19 @@ func downloadTrackers() error {
 		return err
 	}
 
-	// Split the body into lines and store them in the trackersList
-	trackersList = strings.Split(string(body), "\n")
+	// Split the body into lines and filter out empty lines
+	lines := strings.Split(string(body), "\n")
+	newTrackersList := make([]string, 0, len(lines))
+	for _, line := range lines {
+		trimmedLine := strings.TrimSpace(line)
+		if trimmedLine != "" {
+			newTrackersList = append(newTrackersList, trimmedLine)
+		}
+	}
+
+	trackersMutex.Lock()
+	trackersList = newTrackersList
+	trackersMutex.Unlock()
 	return nil
 }
 

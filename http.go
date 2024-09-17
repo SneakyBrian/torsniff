@@ -187,14 +187,25 @@ func sanitizeFilename(name string) string {
 	}, name)
 }
 
-func startHTTP(port int) {
+func trackersHandler(w http.ResponseWriter, r *http.Request) {
+	trackersMutex.RLock()
+	response := map[string][]string{"trackers": trackersList}
+	trackersMutex.RUnlock()
+
+	err := json.NewEncoder(w).Encode(response)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+	}
+}
 
 	http.HandleFunc("/query", Gzip(searchHandler))
 	http.HandleFunc("/torrent", Gzip(torrentHandler))
 	http.HandleFunc("/all", Gzip(allHandler))
 	http.HandleFunc("/delete", Gzip(deleteHandler))           // Register the delete handler
 	http.HandleFunc("/count", Gzip(countHandler))             // Register the count handler
-	http.HandleFunc("/torrentfile", Gzip(torrentFileHandler)) // Register the new handler
+	http.HandleFunc("/torrentfile", Gzip(torrentFileHandler))
+	http.HandleFunc("/trackers", Gzip(trackersHandler)) // Register the trackers handler
 
 	// Create a file system from the embedded files
 	staticFS, err := fs.Sub(staticFiles, "static")
