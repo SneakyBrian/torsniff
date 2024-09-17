@@ -13,6 +13,7 @@ import (
 	"os/signal"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -225,8 +226,8 @@ func (t *torsniff) work(ac *announcement, tokens chan struct{}) {
 }
 
 var (
-    trackersList []string
-    trackersMutex sync.RWMutex
+	trackersList  []string
+	trackersMutex sync.RWMutex
 )
 
 const trackerURL = "https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_best.txt"
