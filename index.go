@@ -150,7 +150,10 @@ func searchTorrents(searchText string, from, size int) ([]*torrent, error) {
 }
 
 func getTorrentsByHashes(hashes []string) ([]*torrent, error) {
-	query := `SELECT infohashHex, name, length, files, added FROM torrents WHERE infohashHex IN (?` + strings.Repeat(",?", len(hashes)-1) + `)`
+	query := `SELECT t.infohashHex, t.name, t.length, t.seeds, t.leechers, t.added, f.name, f.length
+			  FROM torrents t
+			  LEFT JOIN files f ON t.infohashHex = f.torrentInfohashHex
+			  WHERE t.infohashHex IN (?` + strings.Repeat(",?", len(hashes)-1) + `)`
 	args := make([]interface{}, len(hashes))
 	for i, hash := range hashes {
 		args[i] = hash
@@ -162,17 +165,28 @@ func getTorrentsByHashes(hashes []string) ([]*torrent, error) {
 	}
 	defer rows.Close()
 
-	var torrents []*torrent
+	torrentsMap := make(map[string]*torrent)
 	for rows.Next() {
-		var t torrent
-		var files string
+		var infohashHex, name, fileName string
+		var length, fileLength int64
 		var added string
-		if err := rows.Scan(&t.InfohashHex, &t.Name, &t.Length, &files, &added); err != nil {
+		var seeds, leechers int
+		if err := rows.Scan(&infohashHex, &name, &length, &seeds, &leechers, &added, &fileName, &fileLength); err != nil {
 			log.Println(err)
 			continue
 		}
-		t.Files = deserializeFiles(files)
-		torrents = append(torrents, &t)
+
+		t, exists := torrentsMap[infohashHex]
+		if !exists {
+			t = &torrent{InfohashHex: infohashHex, Name: name, Length: length, Seeds: seeds, Leechers: leechers}
+			torrentsMap[infohashHex] = t
+		}
+		t.Files = append(t.Files, &tfile{Name: fileName, Length: fileLength})
+	}
+
+	var torrents []*torrent
+	for _, t := range torrentsMap {
+		torrents = append(torrents, t)
 	}
 	return torrents, nil
 }
