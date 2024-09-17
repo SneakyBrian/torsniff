@@ -41,9 +41,6 @@ const App: React.FC = () => {
       setTotalCount(data.totalCount);
     };
 
-    return () => {
-      ws.close();
-    };
     const fetchTotalCount = async () => {
       try {
         const response = await fetch('/count');
@@ -68,6 +65,10 @@ const App: React.FC = () => {
     };
 
     fetchTrackers();
+
+    return () => {
+      ws.close();
+    };
   }, []); // Fetch total count and trackers only once when the component mounts
 
   useEffect(() => {
