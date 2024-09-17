@@ -357,4 +357,3 @@ func startTrackerDownloadScheduler() {
 	log.Println("closing database...")
 	db.Close()
 	fmt.Println("exiting...")
-}
