@@ -21,14 +21,24 @@ func startIndex() {
 		log.Fatal(err)
 	}
 
-	// Create table if it doesn't exist
+	// Create tables if they don't exist
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS torrents (
 		infohashHex TEXT PRIMARY KEY,
 		name TEXT,
 		length INTEGER,
-		files TEXT,
 		meta BLOB,
 		added DATETIME DEFAULT CURRENT_TIMESTAMP
+	)`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS files (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		torrentInfohashHex TEXT,
+		name TEXT,
+		length INTEGER,
+		FOREIGN KEY (torrentInfohashHex) REFERENCES torrents(infohashHex)
 	)`)
 	if err != nil {
 		log.Fatal(err)
@@ -38,30 +48,62 @@ func startIndex() {
 }
 
 func insertTorrent(t *torrent, meta []byte) error {
-	_, err := db.Exec(`INSERT INTO torrents (infohashHex, name, length, files, meta) VALUES (?, ?, ?, ?, ?)`,
-		t.InfohashHex, t.Name, t.Length, serializeFiles(t.Files), meta)
-	return err
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`INSERT INTO torrents (infohashHex, name, length, meta) VALUES (?, ?, ?, ?)`,
+		t.InfohashHex, t.Name, t.Length, meta)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	for _, file := range t.Files {
+		_, err = tx.Exec(`INSERT INTO files (torrentInfohashHex, name, length) VALUES (?, ?, ?)`,
+			t.InfohashHex, file.Name, file.Length)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	return tx.Commit()
 }
 
 func getAllTorrents(from, size int) ([]*torrent, error) {
-	query := `SELECT infohashHex, name, length, files, added FROM torrents LIMIT ? OFFSET ?`
+	query := `SELECT t.infohashHex, t.name, t.length, t.added, f.name, f.length
+			  FROM torrents t
+			  LEFT JOIN files f ON t.infohashHex = f.torrentInfohashHex
+			  LIMIT ? OFFSET ?`
 	rows, err := db.Query(query, size, from)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var torrents []*torrent
+	torrentsMap := make(map[string]*torrent)
 	for rows.Next() {
-		var t torrent
-		var files string
+		var infohashHex, name, fileName string
+		var length, fileLength int64
 		var added string
-		if err := rows.Scan(&t.InfohashHex, &t.Name, &t.Length, &files, &added); err != nil {
+		if err := rows.Scan(&infohashHex, &name, &length, &added, &fileName, &fileLength); err != nil {
 			log.Println(err)
 			continue
 		}
-		t.Files = deserializeFiles(files)
-		torrents = append(torrents, &t)
+
+		t, exists := torrentsMap[infohashHex]
+		if !exists {
+			t = &torrent{InfohashHex: infohashHex, Name: name, Length: length}
+			torrentsMap[infohashHex] = t
+		}
+		t.Files = append(t.Files, &tfile{Name: fileName, Length: fileLength})
+	}
+
+	var torrents []*torrent
+	for _, t := range torrentsMap {
+		torrents = append(torrents, t)
 	}
 	return torrents, nil
 }
@@ -118,14 +160,34 @@ func getTorrentsByHashes(hashes []string) ([]*torrent, error) {
 }
 
 func deleteTorrents(hashes []string) error {
-	query := `DELETE FROM torrents WHERE infohashHex IN (?` + strings.Repeat(",?", len(hashes)-1) + `)`
-	args := make([]interface{}, len(hashes))
-	for i, hash := range hashes {
-		args[i] = hash
+	tx, err := db.Begin()
+	if err != nil {
+		return err
 	}
 
-	_, err := db.Exec(query, args...)
-	return err
+	query := `DELETE FROM files WHERE torrentInfohashHex IN (?` + strings.Repeat(",?", len(hashes)-1) + `)`
+	_, err = tx.Exec(query, toInterfaceSlice(hashes)...)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	query = `DELETE FROM torrents WHERE infohashHex IN (?` + strings.Repeat(",?", len(hashes)-1) + `)`
+	_, err = tx.Exec(query, toInterfaceSlice(hashes)...)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func toInterfaceSlice(strings []string) []interface{} {
+	result := make([]interface{}, len(strings))
+	for i, s := range strings {
+		result[i] = s
+	}
+	return result
 }
 
 func getTorrentMeta(hash string) ([]byte, error) {
