@@ -199,6 +199,7 @@ func trackersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func startHTTP(port int) {
 	http.HandleFunc("/query", Gzip(searchHandler))
 	http.HandleFunc("/torrent", Gzip(torrentHandler))
 	http.HandleFunc("/all", Gzip(allHandler))
