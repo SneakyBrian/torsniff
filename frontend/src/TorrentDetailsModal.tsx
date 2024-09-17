@@ -16,9 +16,12 @@ const TorrentDetailsModal: React.FC<TorrentDetailsModalProps> = ({
   showModal,
   setShowModal,
   confirmDelete,
+  trackers,
 }) => {
-  const trackerParams = trackers.map(tracker => `&tr=${encodeURIComponent(tracker)}`).join('');
+  const trackerParams = trackers.map((tracker: string) => `&tr=${encodeURIComponent(tracker)}`).join('');
   const magnetLink = `magnet:?xt=urn:btih:${selectedTorrent.infohashHex}${trackerParams}`;
+
+  return (
     <div className={`modal ${showModal ? 'd-block' : 'd-none'}`} tabIndex={-1} role="dialog">
       <div className="modal-dialog" role="document">
         <div className="modal-content">
