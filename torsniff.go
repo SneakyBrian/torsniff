@@ -13,7 +13,10 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"strings"
 	"time"
+	"io"
+	"net/http"
 
 	"github.com/marksamman/bencode"
 	"github.com/spf13/cobra"
@@ -223,7 +226,45 @@ func (t *torsniff) work(ac *announcement, tokens chan struct{}) {
 	log.Println(torrent)
 }
 
-func main() {
+var trackersList []string
+
+const trackerURL = "https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_best.txt"
+
+func downloadTrackers() error {
+	resp, err := http.Get(trackerURL)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to download trackers: %s", resp.Status)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	// Split the body into lines and store them in the trackersList
+	trackersList = strings.Split(string(body), "\n")
+	return nil
+}
+
+func startTrackerDownloadScheduler() {
+	ticker := time.NewTicker(24 * time.Hour)
+	go func() {
+		for {
+			err := downloadTrackers()
+			if err != nil {
+				log.Printf("Error downloading trackers: %v", err)
+			} else {
+				log.Println("Successfully downloaded trackers")
+			}
+			<-ticker.C
+		}
+	}()
+}
 	// log.SetFlags(0)
 
 	var addr string
@@ -251,6 +292,8 @@ func main() {
 		}
 
 		startIndex()
+
+		startTrackerDownloadScheduler()
 
 		// Create a new random generator
 		rng := rand.New(rand.NewSource(time.Now().UnixNano()))
