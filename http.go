@@ -215,6 +215,15 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	clients[conn] = true
 	mutex.Unlock()
 
+	// Fetch the current torrent count
+	currentCount, err := countTorrents()
+	if err != nil {
+		log.Println("Error fetching torrent count:", err)
+	} else {
+		// Use notifyClients to send the current count to the newly connected client
+		notifyClients(currentCount)
+	}
+
 	for {
 		_, _, err := conn.ReadMessage()
 		if err != nil {
