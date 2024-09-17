@@ -81,9 +81,9 @@ func scrapeHTTPTracker(trackerURL string, infohash []byte) (int, int, error) {
 }
 
 const (
-	protocolID    = 0x41727101980 // Protocol ID for UDP trackers
-	actionConnect = 0
-	actionScrape  = 2
+	protocolID    int64  = 0x41727101980 // Protocol ID for UDP trackers
+	actionConnect uint32 = 0
+	actionScrape  uint32 = 2
 )
 
 func scrapeUDPTracker(trackerURL string, infohash []byte) (int, int, error) {
