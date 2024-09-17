@@ -1,5 +1,4 @@
 #!/bin/bash
-#!/bin/bash
 
 # Check if a version parameter is provided
 if [ -z "$1" ]; then
