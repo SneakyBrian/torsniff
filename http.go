@@ -169,21 +169,6 @@ func torrentFileHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(ed)
 }
 
-func countHandler(w http.ResponseWriter, r *http.Request) {
-	count, err := countTorrents()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Println(err)
-		return
-	}
-
-	response := map[string]int{"totalCount": count}
-	err = json.NewEncoder(w).Encode(response)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Println(err)
-	}
-}
 
 func sanitizeFilename(name string) string {
 	// Replace any characters that are not allowed in filenames
@@ -270,7 +255,6 @@ func startHTTP(port int) {
 	http.HandleFunc("/torrent", Gzip(torrentHandler))
 	http.HandleFunc("/all", Gzip(allHandler))
 	http.HandleFunc("/delete", Gzip(deleteHandler)) // Register the delete handler
-	http.HandleFunc("/count", Gzip(countHandler))   // Register the count handler
 	http.HandleFunc("/torrentfile", Gzip(torrentFileHandler))
 	http.HandleFunc("/trackers", Gzip(trackersHandler)) // Register the trackers handler
 
