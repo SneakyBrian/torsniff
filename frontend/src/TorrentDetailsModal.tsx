@@ -8,6 +8,7 @@ interface TorrentDetailsModalProps {
   showModal: boolean;
   setShowModal: (show: boolean) => void;
   confirmDelete: (hash: string) => void;
+  trackers: string[]; // Add trackers prop
 }
 
 const TorrentDetailsModal: React.FC<TorrentDetailsModalProps> = ({
@@ -16,7 +17,8 @@ const TorrentDetailsModal: React.FC<TorrentDetailsModalProps> = ({
   setShowModal,
   confirmDelete,
 }) => {
-  return (
+  const trackerParams = trackers.map(tracker => `&tr=${encodeURIComponent(tracker)}`).join('');
+  const magnetLink = `magnet:?xt=urn:btih:${selectedTorrent.infohashHex}${trackerParams}`;
     <div className={`modal ${showModal ? 'd-block' : 'd-none'}`} tabIndex={-1} role="dialog">
       <div className="modal-dialog" role="document">
         <div className="modal-content">
@@ -28,7 +30,7 @@ const TorrentDetailsModal: React.FC<TorrentDetailsModalProps> = ({
             <p>Size: {formatBytes(selectedTorrent.length)}</p>
             <p>
               Links: 
-              <a href={`magnet:?xt=urn:btih:${selectedTorrent.infohashHex}`} className="btn btn-primary" target="_blank" rel="noopener noreferrer">
+              <a href={magnetLink} className="btn btn-primary" target="_blank" rel="noopener noreferrer">
                 {"🧲"}
               </a>
               <a href={`/torrentfile?h=${selectedTorrent.infohashHex}`} className="btn btn-primary" download>

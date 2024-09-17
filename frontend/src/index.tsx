@@ -12,6 +12,7 @@ const App: React.FC = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [hasMoreResults, setHasMoreResults] = useState(true);
   const [selectedTorrent, setSelectedTorrent] = useState<any | null>(null);
+  const [trackers, setTrackers] = useState<string[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [torrentToDelete, setTorrentToDelete] = useState<string | null>(null);
@@ -45,7 +46,19 @@ const App: React.FC = () => {
     };
 
     fetchTotalCount();
-  }, []); // Fetch total count only once when the component mounts
+    const fetchTrackers = async () => {
+      try {
+        const response = await fetch('/trackers');
+        if (!response.ok) throw new Error('Failed to fetch trackers');
+        const data = await response.json();
+        setTrackers(data.trackers);
+      } catch (err) {
+        setError((err as Error).message);
+      }
+    };
+
+    fetchTrackers();
+  }, []); // Fetch total count and trackers only once when the component mounts
 
   useEffect(() => {
     fetchResults();
@@ -151,6 +164,7 @@ const App: React.FC = () => {
             showModal={showModal}
             setShowModal={setShowModal}
             confirmDelete={confirmDelete}
+            trackers={trackers} // Pass trackers to the modal
           />
         )}
         {showDeleteModal && (
