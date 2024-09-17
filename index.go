@@ -27,6 +27,8 @@ func startIndex() {
 		name TEXT,
 		length INTEGER,
 		meta BLOB,
+		seeds INTEGER DEFAULT 0,
+		leechers INTEGER DEFAULT 0,
 		added DATETIME DEFAULT CURRENT_TIMESTAMP
 	)`)
 	if err != nil {
@@ -53,8 +55,8 @@ func insertTorrent(t *torrent, meta []byte) error {
 		return err
 	}
 
-	_, err = tx.Exec(`INSERT INTO torrents (infohashHex, name, length, meta) VALUES (?, ?, ?, ?)`,
-		t.InfohashHex, t.Name, t.Length, meta)
+	_, err = tx.Exec(`INSERT INTO torrents (infohashHex, name, length, meta, seeds, leechers) VALUES (?, ?, ?, ?, ?, ?)`,
+		t.InfohashHex, t.Name, t.Length, meta, seeds, leechers)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -73,7 +75,7 @@ func insertTorrent(t *torrent, meta []byte) error {
 }
 
 func getAllTorrents(from, size int) ([]*torrent, error) {
-	query := `SELECT t.infohashHex, t.name, t.length, t.added, f.name, f.length
+	query := `SELECT t.infohashHex, t.name, t.length, t.seeds, t.leechers, t.added, f.name, f.length
 			  FROM torrents t
 			  LEFT JOIN files f ON t.infohashHex = f.torrentInfohashHex
 			  LIMIT ? OFFSET ?`
@@ -88,7 +90,8 @@ func getAllTorrents(from, size int) ([]*torrent, error) {
 		var infohashHex, name, fileName string
 		var length, fileLength int64
 		var added string
-		if err := rows.Scan(&infohashHex, &name, &length, &added, &fileName, &fileLength); err != nil {
+		var seeds, leechers int
+		if err := rows.Scan(&infohashHex, &name, &length, &seeds, &leechers, &added, &fileName, &fileLength); err != nil {
 			log.Println(err)
 			continue
 		}

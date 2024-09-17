@@ -24,6 +24,8 @@ import (
 type tfile struct {
 	Name   string `json:"name"`
 	Length int64  `json:"length"`
+	Seeds       int      `json:"seeds"`
+	Leechers    int      `json:"leechers"`
 }
 
 func (t *tfile) String() string {
