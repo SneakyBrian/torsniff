@@ -7,14 +7,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
-	"github.com/gorilla/websocket"
 	"log"
-	"sync"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 
+	"github.com/gorilla/websocket"
 	"github.com/marksamman/bencode"
 )
 
@@ -156,7 +156,7 @@ func torrentFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Re-encode with correct format
 	ed := bencode.Encode(map[string]interface{}{
-		"info": d,
+		"info":          d,
 		"announce-list": trackersList,
 	})
 
@@ -264,15 +264,15 @@ func startWebSocketServer() {
 		}
 	}()
 }
+
+func startHTTP(port int) {
 	http.HandleFunc("/query", Gzip(searchHandler))
 	http.HandleFunc("/torrent", Gzip(torrentHandler))
 	http.HandleFunc("/all", Gzip(allHandler))
-	http.HandleFunc("/delete", Gzip(deleteHandler))           // Register the delete handler
-	http.HandleFunc("/count", Gzip(countHandler))             // Register the count handler
+	http.HandleFunc("/delete", Gzip(deleteHandler)) // Register the delete handler
+	http.HandleFunc("/count", Gzip(countHandler))   // Register the count handler
 	http.HandleFunc("/torrentfile", Gzip(torrentFileHandler))
 	http.HandleFunc("/trackers", Gzip(trackersHandler)) // Register the trackers handler
-
-func startHTTP(port int) {
 
 	// Create a file system from the embedded files
 	staticFS, err := fs.Sub(staticFiles, "static")
