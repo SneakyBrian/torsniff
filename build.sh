@@ -1,11 +1,12 @@
 #!/bin/bash
 
-# Check if a version parameter is provided
-if [ -z "$1" ]; then
-    VERSION="1.0.0"
-else
-    VERSION="$1"
-fi
+ # Get the latest Git tag for the current branch
+ VERSION=$(git describe --tags --abbrev=0 2>/dev/null)
+
+ # If no tag is found, default to 1.0.0
+ if [ -z "$VERSION" ]; then
+     VERSION="1.0.0"
+ fi
 
 # Get the current Git short commit hash
 GIT_HASH=$(git rev-parse --short HEAD)
