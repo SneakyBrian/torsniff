@@ -34,6 +34,16 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
+    const ws = new WebSocket(`${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws`);
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      setTotalCount(data.totalCount);
+    };
+
+    return () => {
+      ws.close();
+    };
     const fetchTotalCount = async () => {
       try {
         const response = await fetch('/count');

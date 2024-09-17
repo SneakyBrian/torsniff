@@ -7,7 +7,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
+	"github.com/gorilla/websocket"
 	"log"
+	"sync"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -205,7 +207,63 @@ func trackersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func startHTTP(port int) {
+var (
+	upgrader = websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+	clients   = make(map[*websocket.Conn]bool)
+	broadcast = make(chan int)
+	mutex     sync.Mutex
+)
+
+func wsHandler(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println("Error upgrading to websocket:", err)
+		return
+	}
+	defer conn.Close()
+
+	mutex.Lock()
+	clients[conn] = true
+	mutex.Unlock()
+
+	for {
+		_, _, err := conn.ReadMessage()
+		if err != nil {
+			log.Println("Error reading message:", err)
+			mutex.Lock()
+			delete(clients, conn)
+			mutex.Unlock()
+			break
+		}
+	}
+}
+
+func notifyClients(count int) {
+	mutex.Lock()
+	defer mutex.Unlock()
+	for client := range clients {
+		err := client.WriteJSON(map[string]int{"totalCount": count})
+		if err != nil {
+			log.Println("Error writing to websocket:", err)
+			client.Close()
+			delete(clients, client)
+		}
+	}
+}
+
+func startWebSocketServer() {
+	http.HandleFunc("/ws", wsHandler)
+	go func() {
+		for {
+			count := <-broadcast
+			notifyClients(count)
+		}
+	}()
+}
 	http.HandleFunc("/query", Gzip(searchHandler))
 	http.HandleFunc("/torrent", Gzip(torrentHandler))
 	http.HandleFunc("/all", Gzip(allHandler))

@@ -532,7 +532,8 @@ func main() {
 		}
 		go p.run()
 
-		startHTTP(httpPort) // Pass the HTTP port to startHTTP
+		startWebSocketServer()
+		startHTTP(httpPort)
 
 		return nil
 	}

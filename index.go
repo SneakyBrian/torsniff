@@ -70,7 +70,14 @@ func insertTorrent(t *torrent, meta []byte) error {
 		}
 	}
 
-	return tx.Commit()
+	err = tx.Commit()
+	if err == nil {
+		currentCount, err := countTorrents()
+		if err == nil {
+			broadcast <- currentCount
+		}
+	}
+	return err
 }
 
 func getAllTorrents(from, size int) ([]*torrent, error) {
