@@ -271,6 +271,9 @@ func startWebSocketServer() {
 	http.HandleFunc("/count", Gzip(countHandler))             // Register the count handler
 	http.HandleFunc("/torrentfile", Gzip(torrentFileHandler))
 	http.HandleFunc("/trackers", Gzip(trackersHandler)) // Register the trackers handler
+}
+
+func startHTTP(port int) {
 
 	// Create a file system from the embedded files
 	staticFS, err := fs.Sub(staticFiles, "static")
