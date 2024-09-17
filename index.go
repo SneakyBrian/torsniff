@@ -56,7 +56,7 @@ func insertTorrent(t *torrent, meta []byte) error {
 	}
 
 	_, err = tx.Exec(`INSERT INTO torrents (infohashHex, name, length, meta, seeds, leechers) VALUES (?, ?, ?, ?, ?, ?)`,
-		t.InfohashHex, t.Name, t.Length, meta, seeds, leechers)
+		t.InfohashHex, t.Name, t.Length, meta, t.Seeds, t.Leechers)
 	if err != nil {
 		tx.Rollback()
 		return err
