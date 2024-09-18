@@ -135,7 +135,8 @@ const App: React.FC = () => {
         {results && results.map((torrent: any) => (
           torrent && (
             <li key={torrent.infohashHex} className="list-group-item d-flex justify-content-between align-items-center">
-              {torrent.name} - {formatBytes(torrent.length)}
+              <span className="torrent-name">{torrent.name}</span>
+              <span className="torrent-size">{formatBytes(torrent.length)}</span>
               <div>
                 <button className="btn btn-outline-primary" onClick={() => handleTorrent(torrent.infohashHex)}>Details</button>
               </div>
