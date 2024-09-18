@@ -29,20 +29,11 @@ go mod tidy
 echo "Building Go binary for linux-amd64"
 GOARCH=amd64 GOOS=linux go build -o releases/torsniff-${VERSION}-linux-amd64
 
-echo "Building Go binary for linux-386"
-GOARCH=386 GOOS=linux go build -o releases/torsniff-${VERSION}-linux-386
-
-echo "Building Go binary for linux-arm7"
-GOARCH=arm GOARM=7 GOOS=linux go build -o releases/torsniff-${VERSION}-linux-arm7
-
 echo "Building Go binary for linux-arm64"
 GOARCH=arm64 GOOS=linux go build -o releases/torsniff-${VERSION}-linux-arm64
 
 echo "Building Go binary for windows-amd64"
 GOARCH=amd64 GOOS=windows go build -o releases/torsniff-${VERSION}-windows-amd64.exe
-
-echo "Building Go binary for windows-386"
-GOARCH=386 GOOS=windows go build -o releases/torsniff-${VERSION}-windows-386.exe
 
 echo "Building Go binary for darwin-amd64"
 GOARCH=amd64 GOOS=darwin go build -o releases/torsniff-${VERSION}-darwin-amd64
