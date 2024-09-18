@@ -118,34 +118,66 @@ func getAllTorrents(from, size int) ([]*torrent, error) {
 }
 
 func searchTorrents(searchText string, from, size int) ([]*torrent, error) {
-	query := `SELECT t.infohashHex, t.name, t.length, t.seeds, t.leechers, t.added, f.name, f.length
-			  FROM torrents t
-			  LEFT JOIN files f ON t.infohashHex = f.torrentInfohashHex
-			  WHERE t.name LIKE ?
-			  LIMIT ? OFFSET ?`
-	rows, err := db.Query(query, "%"+searchText+"%", size, from)
+	// Fetch unique torrents matching the search text
+	torrentQuery := `SELECT infohashHex, name, length, seeds, leechers, added
+					 FROM torrents
+					 WHERE name LIKE ?
+					 LIMIT ? OFFSET ?`
+	torrentRows, err := db.Query(torrentQuery, "%"+searchText+"%", size, from)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer torrentRows.Close()
 
 	torrentsMap := make(map[string]*torrent)
-	for rows.Next() {
-		var infohashHex, name, fileName string
-		var length, fileLength int64
+	var infohashes []string
+
+	for torrentRows.Next() {
+		var infohashHex, name string
+		var length int64
 		var added string
 		var seeds, leechers int
-		if err := rows.Scan(&infohashHex, &name, &length, &seeds, &leechers, &added, &fileName, &fileLength); err != nil {
+		if err := torrentRows.Scan(&infohashHex, &name, &length, &seeds, &leechers, &added); err != nil {
 			log.Println(err)
 			continue
 		}
 
-		t, exists := torrentsMap[infohashHex]
-		if !exists {
-			t = &torrent{InfohashHex: infohashHex, Name: name, Length: length, Seeds: seeds, Leechers: leechers}
-			torrentsMap[infohashHex] = t
+		t := &torrent{InfohashHex: infohashHex, Name: name, Length: length, Seeds: seeds, Leechers: leechers}
+		torrentsMap[infohashHex] = t
+		infohashes = append(infohashes, infohashHex)
+	}
+
+	// If no torrents were found, return early
+	if len(infohashes) == 0 {
+		return nil, nil
+	}
+
+	// Fetch files for the torrents
+	fileQuery := `SELECT torrentInfohashHex, name, length
+				  FROM files
+				  WHERE torrentInfohashHex IN (?` + strings.Repeat(",?", len(infohashes)-1) + `)`
+	args := make([]interface{}, len(infohashes))
+	for i, hash := range infohashes {
+		args[i] = hash
+	}
+
+	fileRows, err := db.Query(fileQuery, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer fileRows.Close()
+
+	for fileRows.Next() {
+		var torrentInfohashHex, fileName string
+		var fileLength int64
+		if err := fileRows.Scan(&torrentInfohashHex, &fileName, &fileLength); err != nil {
+			log.Println(err)
+			continue
 		}
-		t.Files = append(t.Files, &tfile{Name: fileName, Length: fileLength})
+
+		if t, exists := torrentsMap[torrentInfohashHex]; exists {
+			t.Files = append(t.Files, &tfile{Name: fileName, Length: fileLength})
+		}
 	}
 
 	var torrents []*torrent
