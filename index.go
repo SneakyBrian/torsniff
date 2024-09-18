@@ -244,7 +244,19 @@ func getTorrentsByHashes(hashes []string) ([]*torrent, error) {
 			continue
 		}
 
-		t.Files = append(t.Files, &tfile{Name: fileName, Length: fileLength})
+		if t, exists := torrentsMap[infohashHex]; exists {
+			t.Files = append(t.Files, &tfile{Name: fileName, Length: fileLength})
+		} else {
+			t = &torrent{
+				InfohashHex: infohashHex,
+				Name:        name,
+				Length:      length,
+				Seeds:       seeds,
+				Leechers:    leechers,
+				Files:       []*tfile{{Name: fileName, Length: fileLength}},
+			}
+			torrentsMap[infohashHex] = t
+		}
 	}
 
 	var torrents []*torrent
