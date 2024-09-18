@@ -87,8 +87,19 @@ const (
 )
 
 func scrapeUDPTracker(trackerURL string, infohash []byte) (int, int, error) {
-	// Resolve the UDP address
-	addr, err := net.ResolveUDPAddr("udp", trackerURL)
+	// Parse the URL to extract the host and port
+	u, err := url.Parse(trackerURL)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	// Ensure the URL is a UDP URL
+	if u.Scheme != "udp" {
+		return 0, 0, fmt.Errorf("invalid scheme for UDP tracker: %s", u.Scheme)
+	}
+
+	// Use the host and port for the UDP address
+	addr, err := net.ResolveUDPAddr("udp", u.Host)
 	if err != nil {
 		return 0, 0, err
 	}
