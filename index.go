@@ -135,11 +135,6 @@ func getAllTorrents(from, size int) ([]*torrent, error) {
 			continue
 		}
 
-		t, exists := torrentsMap[infohashHex]
-		if !exists {
-			t = &torrent{InfohashHex: infohashHex, Name: name, Length: length, Seeds: seeds, Leechers: leechers}
-			torrentsMap[infohashHex] = t
-		}
 		if t, exists := torrentsMap[torrentInfohashHex]; exists {
 			t.Files = append(t.Files, &tfile{Name: fileName, Length: fileLength})
 		}
