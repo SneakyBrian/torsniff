@@ -84,6 +84,7 @@ func getAllTorrents(from, size int) ([]*torrent, error) {
 	// Fetch unique torrents
 	torrentQuery := `SELECT infohashHex, name, length, seeds, leechers, added
 					 FROM torrents
+					 ORDER BY added
 					 LIMIT ? OFFSET ?`
 	torrentRows, err := db.Query(torrentQuery, size, from)
 	if err != nil {
@@ -152,6 +153,7 @@ func searchTorrents(searchText string, from, size int) ([]*torrent, error) {
 	torrentQuery := `SELECT infohashHex, name, length, seeds, leechers, added
 					 FROM torrents
 					 WHERE name LIKE ?
+					 ORDER BY added
 					 LIMIT ? OFFSET ?`
 	torrentRows, err := db.Query(torrentQuery, "%"+searchText+"%", size, from)
 	if err != nil {
@@ -221,7 +223,8 @@ func getTorrentsByHashes(hashes []string) ([]*torrent, error) {
 	query := `SELECT t.infohashHex, t.name, t.length, t.seeds, t.leechers, t.added, f.name, f.length
 			  FROM torrents t
 			  LEFT JOIN files f ON t.infohashHex = f.torrentInfohashHex
-			  WHERE t.infohashHex IN (?` + strings.Repeat(",?", len(hashes)-1) + `)`
+			  WHERE t.infohashHex IN (?` + strings.Repeat(",?", len(hashes)-1) + `)
+			  ORDER BY t.added`
 	args := make([]interface{}, len(hashes))
 	for i, hash := range hashes {
 		args[i] = hash
