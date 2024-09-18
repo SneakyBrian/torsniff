@@ -137,7 +137,7 @@ const App: React.FC = () => {
             <li key={torrent.infohashHex} className="list-group-item d-flex justify-content-between align-items-center">
               {torrent.name} - {formatBytes(torrent.length)}
               <div>
-                <button className="btn btn-link" onClick={() => handleTorrent(torrent.infohashHex)}>Details</button>
+                <button className="btn btn-outline-primary" onClick={() => handleTorrent(torrent.infohashHex)}>Details</button>
               </div>
             </li>
           )
