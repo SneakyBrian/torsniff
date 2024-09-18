@@ -151,8 +151,7 @@ func torrentFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Add trackers to the torrent metadata
 	trackersMutex.RLock()
-	d["announce-list"] = trackersList
-	trackersMutex.RUnlock()
+	defer trackersMutex.RUnlock()
 
 	// Re-encode with correct format
 	ed := bencode.Encode(map[string]interface{}{
@@ -168,7 +167,6 @@ func torrentFileHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(ed)
 }
-
 
 func sanitizeFilename(name string) string {
 	// Replace any characters that are not allowed in filenames
