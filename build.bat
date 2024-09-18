@@ -1,21 +1,25 @@
 @echo off
 
-REM Navigate to the root directory of the repository
-cd /d %~dp0
+setlocal enabledelayedexpansion
 
 REM Get the latest Git tag for the current branch
-for /f "delims=" %%i in ('git describe --tags --abbrev=0 2^>nul') do set VERSION=%%i
+for /f "delims=" %%i in ('git describe --tags --abbrev=0 2^>nul') do set LATEST_TAG=%%i
 
-REM If no tag is found, default to 1.0.0
-if "%VERSION%"=="" (
-    set VERSION=1.0.0
+@REM echo Latest Git Tag: %LATEST_TAG%
+
+REM If no tag is found, default to 0.0.1
+if "%LATEST_TAG%"=="" (
+    set LATEST_TAG=0.0.1
+    @REM echo Defaulting to: %LATEST_TAG%
 )
 
 REM Get the current Git short commit hash
 for /f "delims=" %%i in ('git rev-parse --short HEAD') do set GIT_HASH=%%i
 
+@REM echo Git Hash: %GIT_HASH%
+
 REM Append the Git hash to the version
-set VERSION=%VERSION%-%GIT_HASH%
+set VERSION=%LATEST_TAG%-%GIT_HASH%
 
 echo Building version %VERSION%
 
