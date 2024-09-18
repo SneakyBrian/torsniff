@@ -31,7 +31,8 @@ const TorrentDetailsModal: React.FC<TorrentDetailsModalProps> = ({
           <div className="modal-body">
             <p>Name: {selectedTorrent.name}</p>
             <p>Size: {formatBytes(selectedTorrent.length)}</p>
-            <p>
+            <p>Seeds: {selectedTorrent.seeds}</p>
+            <p>Leechers: {selectedTorrent.leechers}</p>
               Links: 
               <a href={magnetLink} className="btn btn-primary" target="_blank" rel="noopener noreferrer">
                 {"🧲"}
