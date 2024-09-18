@@ -33,12 +33,13 @@ const TorrentDetailsModal: React.FC<TorrentDetailsModalProps> = ({
             <p>Size: {formatBytes(selectedTorrent.length)}</p>
             <p>Seeds: {selectedTorrent.seeds}</p>
             <p>Leechers: {selectedTorrent.leechers}</p>
+            <p>
               Links: 
               <a href={magnetLink} className="btn btn-primary" target="_blank" rel="noopener noreferrer">
                 {"🧲"}
               </a>
               <a href={`/torrentfile?h=${selectedTorrent.infohashHex}`} className="btn btn-primary" download>
-                📥
+                {"📥"}
               </a>
             </p>
             <h3>Files:</h3>
