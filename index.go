@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"strings"
 
@@ -125,6 +126,10 @@ func getAllTorrents(from, size int) ([]*torrent, error) {
 	}
 
 	fileRows, err := db.Query(fileQuery, args...)
+
+	if err != nil {
+		return nil, fmt.Errorf("error getting all torrents: %w", err)
+	}
 
 	defer fileRows.Close()
 

@@ -26,3 +26,4 @@ frontend/node_modules/
 static/
 frontend/.parcel-cache/
 *.db
+.env

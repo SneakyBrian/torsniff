@@ -551,12 +551,12 @@ func main() {
 
 	root.Flags().StringVarP(&addr, "addr", "a", "", "listen on given address (default all, ipv4 and ipv6)")
 	root.Flags().IntVarP(&port, "port", "p", -1, "listen on given port") // Default to -1
-	root.Flags().IntVarP(&friends, "friends", "f", 500, "max fiends to make with per second")
+	root.Flags().IntVarP(&friends, "friends", "f", 500, "max friends to make with per second")
 	root.Flags().IntVarP(&peers, "peers", "e", 400, "max peers to connect to download torrents")
 	root.Flags().DurationVarP(&timeout, "timeout", "t", 30*time.Second, "max time allowed for downloading torrents")
 	root.Flags().BoolVarP(&verbose, "verbose", "v", true, "run in verbose mode")
 	root.Flags().IntVarP(&httpPort, "http-port", "H", 8090, "HTTP server port")
-	root.Flags().IntVarP(&maxRetries, "max-retries", "r", 3, "maximum number of retries to fetch metadata") // New flag for max retries
+	root.Flags().IntVarP(&maxRetries, "max-retries", "r", 1, "maximum number of retries to fetch metadata") // New flag for max retries
 
 	root.Flags().BoolVarP(&enableHTTPPortMapping, "enable-http-port-mapping", "m", false, "enable HTTP port mapping for UPnP") // New flag with short option
 
